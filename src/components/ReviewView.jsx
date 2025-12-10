@@ -1,34 +1,44 @@
 import React, { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import ScoringPanel from './ScoringPanel';
-import { ArrowLeft, ExternalLink, FileText, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, CheckCircle2, Calendar, MapPin, GraduationCap, Mail, Home } from 'lucide-react';
 
 const DocumentCard = ({ title, url, verified, onVerify }) => {
     if (!url) return null;
 
     return (
-        <div className={`p-4 rounded-xl border transition-all ${verified ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-sm'}`}>
-            <div className="flex items-start justify-between mb-3">
-                <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+        <div className={`group relative p-5 rounded-2xl border transition-all duration-300 ${verified
+                ? 'bg-green-50/50 border-green-200 shadow-sm'
+                : 'bg-white border-gray-100 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-900/5 hover:-translate-y-1'
+            }`}>
+            <div className="flex items-start justify-between mb-4">
+                <div className={`p-2.5 rounded-xl transition-colors ${verified ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-100'
+                    }`}>
                     <FileText className="w-5 h-5" />
                 </div>
                 <button
-                    onClick={onVerify}
-                    className={`text-sm flex items-center gap-1 transition-colors ${verified ? 'text-green-600 font-medium' : 'text-gray-400 hover:text-green-600'}`}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onVerify();
+                    }}
+                    className={`text-sm flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all ${verified
+                            ? 'bg-green-100 text-green-700 font-medium'
+                            : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                        }`}
                 >
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className={`w-4 h-4 ${verified ? 'fill-current' : ''}`} />
                     {verified ? 'Verified' : 'Verify'}
                 </button>
             </div>
-            <h4 className="font-medium text-gray-900 text-sm mb-3 line-clamp-2 h-10" title={title}>{title}</h4>
+            <h4 className="font-semibold text-gray-900 text-sm mb-4 line-clamp-2 h-10 leading-relaxed" title={title}>{title}</h4>
             <a
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                className="flex items-center justify-center gap-2 w-full py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm group-hover:shadow"
             >
                 Open Document
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="w-3.5 h-3.5" />
             </a>
         </div>
     );
@@ -58,8 +68,6 @@ const ReviewView = () => {
     };
 
     const handleSave = () => {
-        // Status is inferred or manually set, but 'Save & Back' implies we keep current progress
-        // If not started, maybe set to in_progress?
         if (getReviewStatus(activeApplicationId) === 'not_started') {
             updateReview(activeApplicationId, { status: 'in_progress' });
         }
@@ -90,66 +98,76 @@ const ReviewView = () => {
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-8rem)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-8rem)]">
             {/* Left Column: Info & Docs (Scrollable) */}
-            <div className="lg:col-span-2 space-y-6 overflow-y-auto pr-2 pb-20">
+            <div className="lg:col-span-8 space-y-8 overflow-y-auto pr-4 pb-20 scrollbar-hide">
                 {/* Header */}
-                <div className="flex items-center gap-4 mb-2">
+                <div className="flex items-start gap-5 mb-2">
                     <button
                         onClick={navigateToDashboard}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                        className="group p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm hover:shadow"
                     >
-                        <ArrowLeft className="w-6 h-6" />
+                        <ArrowLeft className="w-5 h-5 text-gray-500 group-hover:text-gray-900" />
                     </button>
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-900">{application.name}</h2>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <span>{application.university}</span>
-                            <span>•</span>
-                            <span>{application.destinationCity}, {application.destinationCountry}</span>
+                    <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">{application.name}</h2>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getReviewStatus(activeApplicationId) === 'reviewed' ? 'bg-green-50 text-green-700 border-green-100' :
+                                    getReviewStatus(activeApplicationId) === 'in_progress' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
+                                        'bg-gray-50 text-gray-600 border-gray-200'
+                                }`}>
+                                {getReviewStatus(activeApplicationId).replace('_', ' ')}
+                            </span>
                         </div>
-                    </div>
-                    <div className="ml-auto">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${getReviewStatus(activeApplicationId) === 'reviewed' ? 'bg-green-100 text-green-700' :
-                                getReviewStatus(activeApplicationId) === 'in_progress' ? 'bg-yellow-100 text-yellow-700' :
-                                    'bg-gray-100 text-gray-600'
-                            }`}>
-                            {getReviewStatus(activeApplicationId).replace('_', ' ')}
-                        </span>
+                        <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+                            <span className="flex items-center gap-1"><GraduationCap className="w-4 h-4" /> {application.university}</span>
+                            <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                            <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {application.destinationCity}, {application.destinationCountry}</span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Basic Info Card */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Candidate Details</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8 text-sm">
-                        <div>
-                            <div className="text-gray-500 mb-1">Email</div>
-                            <div className="font-medium">{application.email}</div>
+                <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">Candidate Details</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-12">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium mb-1">
+                                <Mail className="w-4 h-4" /> Email
+                            </div>
+                            <div className="font-semibold text-gray-900">{application.email}</div>
                         </div>
-                        <div>
-                            <div className="text-gray-500 mb-1">Birth Date</div>
-                            <div className="font-medium">{application.birthDate}</div>
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium mb-1">
+                                <Calendar className="w-4 h-4" /> Birth Date
+                            </div>
+                            <div className="font-semibold text-gray-900">{application.birthDate}</div>
                         </div>
-                        <div>
-                            <div className="text-gray-500 mb-1">Course</div>
-                            <div className="font-medium">{application.course} ({application.year})</div>
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium mb-1">
+                                <GraduationCap className="w-4 h-4" /> Course
+                            </div>
+                            <div className="font-semibold text-gray-900">{application.course} <span className="text-gray-400 font-normal">({application.year})</span></div>
                         </div>
-                        <div className="col-span-2">
-                            <div className="text-gray-500 mb-1">Address</div>
-                            <div className="font-medium">{application.address}</div>
+                        <div className="col-span-2 space-y-1">
+                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium mb-1">
+                                <Home className="w-4 h-4" /> Address
+                            </div>
+                            <div className="font-semibold text-gray-900">{application.address}</div>
                         </div>
-                        <div>
-                            <div className="text-gray-500 mb-1">Submission Date</div>
-                            <div className="font-medium">{new Date(application.timestamp).toLocaleDateString()}</div>
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium mb-1">
+                                <Calendar className="w-4 h-4" /> Submission Date
+                            </div>
+                            <div className="font-semibold text-gray-900">{new Date(application.timestamp).toLocaleDateString()}</div>
                         </div>
                     </div>
                 </div>
 
                 {/* Documents Grid */}
                 <div>
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Documents</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6 ml-1">Documents</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                         {Object.entries(application.documents).map(([key, url]) => (
                             <DocumentCard
                                 key={key}
@@ -164,7 +182,7 @@ const ReviewView = () => {
             </div>
 
             {/* Right Column: Scoring (Fixed on Desktop) */}
-            <div className="lg:col-span-1 lg:h-full">
+            <div className="lg:col-span-4 lg:h-full">
                 <ScoringPanel
                     review={review}
                     onUpdate={handleScoreUpdate}
