@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { parseCSV, mapApplicationData } from '../utils/csvParser';
-import { subscribeToReviews, saveReviewToDb } from '../services/db';
+import { subscribeToReviews, saveReviewToDb, saveCommentToDb } from '../services/db';
 import defaultDataUrl from '../assets/data.csv?url';
 
 const AppContext = createContext();
@@ -56,6 +56,31 @@ export const AppProvider = ({ children }) => {
     };
 
 
+    const addReviewComment = async (id, comment) => {
+        // Optimistic update
+        setReviews(prev => {
+            const currentReview = prev[id] || {};
+            const currentComments = currentReview.comments || [];
+            return {
+                ...prev,
+                [id]: {
+                    ...currentReview,
+                    comments: [...currentComments, comment],
+                    lastUpdated: new Date().toISOString()
+                }
+            };
+        });
+
+        // Save to DB
+        try {
+            await saveCommentToDb(id, comment);
+        } catch (err) {
+            console.error("Failed to save comment to DB:", err);
+            // In a real app we might want to revert the optimistic update or show a toast
+        }
+    };
+
+
 
     const getReviewStatus = (id) => {
         const review = reviews[id];
@@ -76,6 +101,7 @@ export const AppProvider = ({ children }) => {
             error,
             loadData,
             updateReview,
+            addReviewComment,
             getReviewStatus
         }}>
             {children}

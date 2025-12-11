@@ -25,6 +25,7 @@ const ReviewView = () => {
         applications,
         reviews,
         updateReview,
+        addReviewComment,
         getReviewStatus,
         isLoading
     } = useApp();
@@ -80,8 +81,7 @@ const ReviewView = () => {
             authorPhoto: currentUser?.photoURL,
             authorId: currentUser?.uid
         };
-        const updatedComments = [...(review.comments || []), newComment];
-        updateReview(id, { comments: updatedComments });
+        addReviewComment(id, newComment);
     };
 
     const handleSave = () => {
