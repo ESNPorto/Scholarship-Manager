@@ -82,8 +82,10 @@ const ReviewView = () => {
         const newVerifiedCount = Object.values(newVerifiedDocs).filter(Boolean).length;
         if (newVerifiedCount === requiredTotal) {
             updates.status = 'reviewed';
+            updates.valid = true;
         } else if (getReviewStatus(id) === 'not_started') {
             updates.status = 'in_progress';
+            updates.valid = true;
         }
 
         updateReview(id, updates);
@@ -202,7 +204,16 @@ const ReviewView = () => {
                                         type="checkbox"
                                         className="sr-only"
                                         checked={review.valid !== false} // Default to true (undefined is true)
-                                        onChange={() => updateReview(id, { valid: review.valid === false })}
+                                        onChange={() => {
+                                            const isCurrentlyValid = review.valid !== false;
+                                            if (isCurrentlyValid) {
+                                                // Making it INVALID
+                                                updateReview(id, { valid: false, status: 'discarded' });
+                                            } else {
+                                                // Making it VALID
+                                                updateReview(id, { valid: true, status: 'not_started' });
+                                            }
+                                        }}
                                     />
                                     <div className={`block w-14 h-8 rounded-full transition-colors ${review.valid !== false ? 'bg-esn-green' : 'bg-gray-300'}`}></div>
                                     <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${review.valid !== false ? 'translate-x-6' : ''}`}></div>
@@ -332,7 +343,15 @@ const ReviewView = () => {
                         </span>
                         <StatusDropdown
                             status={getReviewStatus(id)}
-                            onStatusChange={(newStatus) => updateReview(id, { status: newStatus })}
+                            onStatusChange={(newStatus) => {
+                                const updates = { status: newStatus };
+                                if (newStatus === 'discarded') {
+                                    updates.valid = false;
+                                } else {
+                                    updates.valid = true;
+                                }
+                                updateReview(id, updates);
+                            }}
                         />
                     </div>
                 </div>

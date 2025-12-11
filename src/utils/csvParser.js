@@ -137,7 +137,7 @@ export const mapApplicationData = async (rawData, editionId, columnMapping, impo
         return {
             id: id,
             editionId: editionId,
-            status: 'submitted', // Original mapping kept this 'submitted', but our review status is nested
+            status: status, // Sync status with review status
             importedAt: new Date().toISOString(),
             personalInfo: {
                 name: name,
