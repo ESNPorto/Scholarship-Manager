@@ -1,22 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { parseCSV, mapApplicationData } from '../utils/csvParser';
+import { subscribeToReviews, saveReviewToDb } from '../services/db';
 import defaultDataUrl from '../assets/data.csv?url';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
     const [applications, setApplications] = useState([]);
-    const [reviews, setReviews] = useState(() => {
-        const saved = localStorage.getItem('scholarship_reviews');
-        return saved ? JSON.parse(saved) : {};
-    });
+    const [reviews, setReviews] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Persist reviews
+    // Subscribe to reviews from Firestore
     useEffect(() => {
-        localStorage.setItem('scholarship_reviews', JSON.stringify(reviews));
-    }, [reviews]);
+        const unsubscribe = subscribeToReviews((newReviews) => {
+            setReviews(newReviews);
+        });
+        return () => unsubscribe();
+    }, []);
 
     // Auto-load data on mount
     useEffect(() => {
@@ -38,11 +39,20 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    const updateReview = (id, reviewData) => {
+    const updateReview = async (id, reviewData) => {
+        // Optimistic update
         setReviews(prev => ({
             ...prev,
             [id]: { ...prev[id], ...reviewData, lastUpdated: new Date().toISOString() }
         }));
+
+        // Save to DB
+        try {
+            await saveReviewToDb(id, reviewData);
+        } catch (err) {
+            console.error("Failed to save review to DB:", err);
+            // Revert or show error? For now just log.
+        }
     };
 
 
