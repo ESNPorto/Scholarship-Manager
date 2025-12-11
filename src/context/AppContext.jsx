@@ -29,7 +29,7 @@ export const AppProvider = ({ children }) => {
         setError(null);
         try {
             const rawData = await parseCSV(file);
-            const mappedData = mapApplicationData(rawData);
+            const mappedData = await mapApplicationData(rawData);
             setApplications(mappedData);
         } catch (err) {
             console.error("Error parsing CSV:", err);

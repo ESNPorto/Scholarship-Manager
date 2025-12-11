@@ -15,13 +15,23 @@ export const parseCSV = (fileOrUrl) => {
     });
 };
 
-export const mapApplicationData = (rawData) => {
-    return rawData.map((row, index) => {
+const hashString = async (message) => {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+export const mapApplicationData = async (rawData) => {
+    const mappedPromises = rawData.map(async (row, index) => {
         // Skip empty rows
         if (!row['Nome'] && !row['E-mail']) return null;
 
+        const email = row['E-mail'] ? row['E-mail'].trim().toLowerCase() : '';
+        const id = await hashString(email);
+
         return {
-            id: row['E-mail'].trim().toLowerCase(), // Stable ID based on normalized email
+            id: id,
             timestamp: row['Timestamp'],
             email: row['E-mail'],
             name: row['Nome'],
@@ -44,5 +54,8 @@ export const mapApplicationData = (rawData) => {
             gdpr: row['O tratamento de dados é aceite?'],
             contact: row['Desejas ser contactado para saber quando abre o nosso recrutamento?'],
         };
-    }).filter(Boolean);
+    });
+
+    const results = await Promise.all(mappedPromises);
+    return results.filter(Boolean);
 };
