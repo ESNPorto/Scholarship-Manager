@@ -1,12 +1,43 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Users, FileCheck, Hourglass } from 'lucide-react';
+import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Users, FileCheck, Hourglass, Trophy, Medal, Award, FileDown, Download } from 'lucide-react';
+import Papa from 'papaparse';
 
 const DashboardView = () => {
-    const { applications, navigateToReview, getReviewStatus } = useApp();
+    const { applications, reviews, navigateToReview, getReviewStatus } = useApp();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'reviewed', 'in_progress', 'not_started'
-    const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+    const [sortConfig, setSortConfig] = useState({ key: 'score', direction: 'desc' });
+
+    // --- Helper: Calculate Score ---
+    const getScore = (id) => {
+        const review = reviews[id];
+        if (!review) return 0;
+        const motivation = Number(review.motivation || 0);
+        const academic = Number(review.academic || 0);
+        const presentation = Number(review.presentation || 0);
+        const fit = Number(review.fit || 0);
+        return motivation + academic + presentation + fit;
+    };
+
+    // --- Derived Data: Applications with Scores & Ranks ---
+    const processedApplications = useMemo(() => {
+        // 1. Attach scores
+        const withScores = applications.map(app => ({
+            ...app,
+            score: getScore(app.id),
+            status: getReviewStatus(app.id)
+        }));
+
+        // 2. Sort by score desc to determine rank
+        const ranked = [...withScores].sort((a, b) => b.score - a.score);
+
+        // 3. Attach rank
+        return ranked.map((app, index) => ({
+            ...app,
+            rank: index + 1
+        }));
+    }, [applications, reviews, getReviewStatus]);
 
     const stats = useMemo(() => {
         const total = applications.length;
@@ -16,11 +47,11 @@ const DashboardView = () => {
     }, [applications, getReviewStatus]);
 
     const filteredApplications = useMemo(() => {
-        let filtered = [...applications];
+        let filtered = [...processedApplications];
 
         // Filter by status
         if (statusFilter !== 'all') {
-            filtered = filtered.filter(app => getReviewStatus(app.id) === statusFilter);
+            filtered = filtered.filter(app => app.status === statusFilter);
         }
 
         // Filter by search term
@@ -46,13 +77,42 @@ const DashboardView = () => {
         });
 
         return filtered;
-    }, [applications, searchTerm, statusFilter, sortConfig, getReviewStatus]);
+    }, [processedApplications, searchTerm, statusFilter, sortConfig]);
 
     const handleSort = (key) => {
         setSortConfig(current => ({
             key,
             direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
         }));
+    };
+
+    const handleExportCSV = () => {
+        const exportData = processedApplications.map((app) => ({
+            Rank: app.rank,
+            Name: app.name,
+            Email: app.email,
+            University: app.university,
+            Destination: `${app.destinationCity}, ${app.destinationCountry}`,
+            Score: app.score,
+            Status: app.status,
+            'Motivation Score': reviews[app.id]?.motivation || 0,
+            'Academic Score': reviews[app.id]?.academic || 0,
+            'Presentation Score': reviews[app.id]?.presentation || 0,
+            'Fit Score': reviews[app.id]?.fit || 0,
+            'Documents Complete': reviews[app.id]?.documentsComplete ? 'Yes' : 'No',
+            Notes: (reviews[app.id]?.comments || []).map(c => c.text).join('; ')
+        }));
+
+        const csv = Papa.unparse(exportData);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'scholarship_ranking.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     const StatusBadge = ({ status }) => {
@@ -76,6 +136,13 @@ const DashboardView = () => {
                     </span>
                 );
         }
+    };
+
+    const RankIcon = ({ rank }) => {
+        if (rank === 1) return <Trophy className="w-5 h-5 text-yellow-500 drop-shadow-sm" />;
+        if (rank === 2) return <Medal className="w-5 h-5 text-gray-400 drop-shadow-sm" />;
+        if (rank === 3) return <Award className="w-5 h-5 text-orange-500 drop-shadow-sm" />;
+        return <span className="text-sm font-bold text-gray-400">#{rank}</span>;
     };
 
     if (applications.length === 0) {
@@ -142,13 +209,13 @@ const DashboardView = () => {
                     <input
                         type="text"
                         placeholder="Search candidates, universities..."
-                        className="w-full pl-11 pr-4 py-3 border-none bg-transparent focus:ring-0 text-sm font-medium text-gray-900 placeholder-gray-400"
+                        className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium text-gray-900 placeholder-gray-400"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
 
-                <div className="flex gap-2 w-full sm:w-auto p-1">
+                <div className="flex gap-2 w-full sm:w-auto p-1 items-center">
                     <div className="relative">
                         <select
                             className="appearance-none pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
@@ -162,6 +229,14 @@ const DashboardView = () => {
                         </select>
                         <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                     </div>
+
+                    <button
+                        onClick={handleExportCSV}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95 ml-2"
+                    >
+                        <FileDown className="w-4 h-4" />
+                        Export
+                    </button>
                 </div>
             </div>
 
@@ -171,6 +246,9 @@ const DashboardView = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50 border-b border-gray-100">
+                                <th className="px-6 py-5 w-20 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('rank')}>
+                                    <div className="flex items-center justify-center gap-2">Rank <ArrowUpDown className="w-3 h-3" /></div>
+                                </th>
                                 <th className="px-6 py-5 text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('name')}>
                                     <div className="flex items-center gap-2">Name <ArrowUpDown className="w-3 h-3" /></div>
                                 </th>
@@ -180,16 +258,27 @@ const DashboardView = () => {
                                 <th className="px-6 py-5 text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('destinationCountry')}>
                                     <div className="flex items-center gap-2">Destination <ArrowUpDown className="w-3 h-3" /></div>
                                 </th>
-                                <th className="px-6 py-5 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Status</th>
-                                <th className="px-6 py-5 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                                <th className="px-6 py-5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('score')}>
+                                    <div className="flex items-center justify-center gap-2">Score <ArrowUpDown className="w-3 h-3" /></div>
+                                </th>
+                                <th className="px-6 py-5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {filteredApplications.map((app) => (
-                                <tr key={app.id} className="hover:bg-blue-50/30 transition-colors group">
+                                <tr
+                                    key={app.id}
+                                    onClick={() => navigateToReview(app.id)}
+                                    className="hover:bg-blue-50/30 transition-colors group cursor-pointer"
+                                >
+                                    <td className="px-6 py-4 text-center">
+                                        <div className="flex justify-center items-center">
+                                            <RankIcon rank={app.rank} />
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
                                                 {app.name.charAt(0)}
                                             </div>
                                             <span className="font-semibold text-gray-900">{app.name}</span>
@@ -200,15 +289,13 @@ const DashboardView = () => {
                                         {app.destinationCity}, <span className="text-gray-400">{app.destinationCountry}</span>
                                     </td>
                                     <td className="px-6 py-4 text-center">
-                                        <StatusBadge status={getReviewStatus(app.id)} />
+                                        <span className={`text-lg font-bold tabular-nums tracking-tight ${app.score >= 75 ? 'text-green-600' :
+                                            app.score >= 50 ? 'text-blue-600' :
+                                                'text-orange-500'
+                                            }`}>{app.score}</span>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button
-                                            onClick={() => navigateToReview(app.id)}
-                                            className="text-blue-600 hover:text-blue-700 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-50 transition-all active:scale-95"
-                                        >
-                                            Review
-                                        </button>
+                                    <td className="px-6 py-4 text-center">
+                                        <StatusBadge status={app.status} />
                                     </td>
                                 </tr>
                             ))}

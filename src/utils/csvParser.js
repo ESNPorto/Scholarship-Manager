@@ -26,6 +26,7 @@ export const mapApplicationData = (rawData) => {
             email: row['E-mail'],
             name: row['Nome'],
             birthDate: row['Data de Nascimento'],
+            applicationYear: row['Ano'],
             university: row['Faculdade/ Universidade que frequentas'],
             course: row['Curso que frequentas'],
             year: row['Ano em que te encontras'],

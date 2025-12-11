@@ -3,7 +3,6 @@ import { useApp } from './context/AppContext';
 import Layout from './components/Layout';
 import DashboardView from './components/DashboardView';
 import ReviewView from './components/ReviewView';
-import SummaryView from './components/SummaryView';
 
 const AppContent = () => {
   const { view } = useApp();
@@ -12,7 +11,6 @@ const AppContent = () => {
     <Layout>
       {view === 'dashboard' && <DashboardView />}
       {view === 'review' && <ReviewView />}
-      {view === 'summary' && <SummaryView />}
     </Layout>
   );
 };

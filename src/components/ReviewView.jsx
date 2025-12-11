@@ -241,7 +241,8 @@ const ReviewView = () => {
                         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">{application.name}</h1>
                         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
                             <span className="flex items-center gap-1.5"><Mail className="w-4 h-4 text-gray-400" /> {application.email}</span>
-                            <span className="flex items-center gap-1.5"><GraduationCap className="w-4 h-4 text-gray-400" /> {application.course} ({application.year})</span>
+                            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-gray-400" /> {application.birthDate}</span>
+                            <span className="flex items-center gap-1.5"><GraduationCap className="w-4 h-4 text-gray-400" /> {application.course} @ {application.university} ({application.year})</span>
                             <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-gray-400" /> {application.destinationCity}</span>
                         </div>
                     </div>

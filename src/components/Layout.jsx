@@ -1,9 +1,9 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { LayoutDashboard, FileText, BarChart3, Upload } from 'lucide-react';
+import { FileText, Upload } from 'lucide-react';
 
 const Layout = ({ children }) => {
-    const { view, navigateToDashboard, navigateToSummary, loadData } = useApp();
+    const { navigateToDashboard, loadData } = useApp();
 
     const handleFileUpload = (event) => {
         const file = event.target.files[0];
@@ -28,35 +28,6 @@ const Layout = ({ children }) => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        <nav className="flex gap-1 bg-gray-100/50 p-1 rounded-xl border border-gray-200/50">
-                            <button
-                                onClick={navigateToDashboard}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${view === 'dashboard' || view === 'review'
-                                        ? 'bg-white text-blue-600 shadow-sm ring-1 ring-black/5'
-                                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <LayoutDashboard className="w-4 h-4" />
-                                    Applications
-                                </div>
-                            </button>
-                            <button
-                                onClick={navigateToSummary}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${view === 'summary'
-                                        ? 'bg-white text-blue-600 shadow-sm ring-1 ring-black/5'
-                                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <BarChart3 className="w-4 h-4" />
-                                    Summary
-                                </div>
-                            </button>
-                        </nav>
-
-                        <div className="h-8 w-px bg-gray-200"></div>
-
                         <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-500 cursor-pointer transition-all duration-200 shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 active:scale-95 text-sm font-medium">
                             <Upload className="w-4 h-4" />
                             Import CSV
@@ -80,4 +51,3 @@ const Layout = ({ children }) => {
 };
 
 export default Layout;
-
