@@ -56,8 +56,6 @@ export const AppProvider = ({ children }) => {
                 // Flatten Personal Info
                 name: app.personalInfo?.name || app.name || 'Unknown',
                 email: app.personalInfo?.email || app.email || '',
-                studentNumber: app.personalInfo?.studentNumber || app.studentNumber || '',
-                phoneNumber: app.personalInfo?.phoneNumber || app.phoneNumber || '',
 
                 // Flatten Academic Info
                 university: app.academicInfo?.university || app.university || '',

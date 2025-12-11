@@ -5,6 +5,8 @@ import { createEdition, batchSaveApplications, updateEdition, deleteEdition, get
 import { parseCSV, mapApplicationData } from '../utils/csvParser';
 import { useApp } from '../context/AppContext';
 
+import ColumnMappingModal from './ColumnMappingModal';
+
 const ImportView = () => {
     const { editions, refreshEditions, isEditionsLoading, currentEditionId, loadApplications } = useApp();
 
@@ -23,6 +25,11 @@ const ImportView = () => {
     const [importFile, setImportFile] = useState(null);
     const [isImporting, setIsImporting] = useState(false);
     const [importStatus, setImportStatus] = useState(null); // { type: 'success' | 'error', message: '' }
+
+    // Mapping State
+    const [showMappingModal, setShowMappingModal] = useState(false);
+    const [csvHeaders, setCsvHeaders] = useState([]);
+    const [parsedData, setParsedData] = useState([]);
 
     // Preview Data State
     const [previewApps, setPreviewApps] = useState([]);
@@ -117,6 +124,7 @@ const ImportView = () => {
         const file = e.dataTransfer.files[0];
         if (file && file.type === 'text/csv') {
             setImportFile(file);
+            setImportStatus(null);
         } else {
             setImportStatus({ type: 'error', message: 'Please upload a valid CSV file.' });
         }
@@ -124,31 +132,66 @@ const ImportView = () => {
 
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
-        if (file) setImportFile(file);
+        if (file) {
+            setImportFile(file);
+            setImportStatus(null);
+        }
     };
 
-    const handleImport = async () => {
+    const handleImportClick = async () => {
         if (!selectedEditionId || !importFile) return;
 
         setIsImporting(true);
         setImportStatus(null);
 
         try {
-            const rawData = await parseCSV(importFile);
-            const mappedData = await mapApplicationData(rawData, selectedEditionId);
+            // 1. Parse CSV to get headers and raw data
+            const result = await parseCSV(importFile);
 
+            // Check if we have data and headers
+            if (!result.data || result.data.length === 0) {
+                throw new Error("CSV file is empty or could not be parsed.");
+            }
+
+            if (!result.meta || !result.meta.fields || result.meta.fields.length === 0) {
+                throw new Error("Could not detect headers in CSV file.");
+            }
+
+            setParsedData(result.data);
+            setCsvHeaders(result.meta.fields);
+            setShowMappingModal(true); // Open the modal
+
+        } catch (error) {
+            console.error("Pre-import failed:", error);
+            setImportStatus({ type: 'error', message: `Failed to parse CSV: ${error.message}` });
+        } finally {
+            setIsImporting(false); // Stop loading spinner (modal will handle next step)
+        }
+    };
+
+    const handleMappingConfirm = async (mapping) => {
+        setShowMappingModal(false);
+        setIsImporting(true); // Restart loading
+
+        try {
+            // 2. Map data using the user-confirmed mapping
+            const mappedData = await mapApplicationData(parsedData, selectedEditionId, mapping);
+
+            // 3. Save to DB
             await batchSaveApplications(selectedEditionId, mappedData);
 
             setImportStatus({ type: 'success', message: `Successfully imported ${mappedData.length} applications!` });
             setImportFile(null);
+            setParsedData([]);
+            setCsvHeaders([]);
 
             // Reload context if we imported into the current edition
             if (selectedEditionId === currentEditionId) {
                 await loadApplications(selectedEditionId);
             }
         } catch (error) {
-            console.error("Import failed:", error);
-            setImportStatus({ type: 'error', message: `Import failed: ${error.message} ` });
+            console.error("Import execution failed:", error);
+            setImportStatus({ type: 'error', message: `Import failed: ${error.message}` });
         } finally {
             setIsImporting(false);
         }
@@ -377,7 +420,7 @@ const ImportView = () => {
 
                                 <div className="flex justify-end pt-4">
                                     <button
-                                        onClick={handleImport}
+                                        onClick={handleImportClick}
                                         disabled={!importFile || isImporting}
                                         className="px-8 py-3 bg-esn-dark-blue hover:bg-esn-dark-blue/90 text-white rounded-xl font-semibold shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:shadow-none flex items-center gap-2"
                                     >
@@ -398,6 +441,19 @@ const ImportView = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Column Mapping Modal */}
+            <ColumnMappingModal
+                isOpen={showMappingModal}
+                headers={csvHeaders}
+                onClose={() => {
+                    setShowMappingModal(false);
+                    setIsImporting(false);
+                    setParsedData([]);
+                    setCsvHeaders([]);
+                }}
+                onConfirm={handleMappingConfirm}
+            />
 
             {/* Data Preview Section */}
             {selectedEditionId && (
@@ -434,8 +490,6 @@ const ImportView = () => {
                                         {/* Personal Info */}
                                         <th className="px-4 py-3 bg-gray-50 sticky left-0 z-10 shadow-sm">Name</th>
                                         <th className="px-4 py-3">Email</th>
-                                        <th className="px-4 py-3">Phone</th>
-                                        <th className="px-4 py-3">Student No.</th>
 
                                         {/* Academic Info */}
                                         <th className="px-4 py-3 bg-blue-50/10">University</th>
@@ -453,11 +507,8 @@ const ImportView = () => {
 
                                         {/* Documents */}
                                         <th className="px-4 py-3 bg-purple-50/10">Motivation</th>
-                                        <th className="px-4 py-3 bg-purple-50/10">CV</th>
                                         <th className="px-4 py-3 bg-purple-50/10">Learning Agr.</th>
                                         <th className="px-4 py-3 bg-purple-50/10">Transcript</th>
-                                        <th className="px-4 py-3 bg-purple-50/10">Proof Enrol.</th>
-                                        <th className="px-4 py-3 bg-purple-50/10">ID/Passport</th>
                                         <th className="px-4 py-3 bg-purple-50/10">Social/Disad.</th>
                                     </tr>
                                 </thead>
@@ -470,12 +521,6 @@ const ImportView = () => {
                                             </td>
                                             <td className="px-4 py-3 text-gray-600 max-w-[150px] truncate" title={app.personalInfo?.email || app.email}>
                                                 {app.personalInfo?.email || app.email || '-'}
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-600">
-                                                {app.personalInfo?.phoneNumber || app.phoneNumber || '-'}
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-600">
-                                                {app.personalInfo?.studentNumber || app.studentNumber || '-'}
                                             </td>
 
                                             {/* Academic */}
@@ -517,11 +562,6 @@ const ImportView = () => {
                                                 </a>
                                             </td>
                                             <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
-                                                <a href={app.documents?.cv} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                                    {app.documents?.cv || '-'}
-                                                </a>
-                                            </td>
-                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
                                                 <a href={app.documents?.learningAgreement} target="_blank" rel="noopener noreferrer" className="hover:underline">
                                                     {app.documents?.learningAgreement || '-'}
                                                 </a>
@@ -529,16 +569,6 @@ const ImportView = () => {
                                             <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
                                                 <a href={app.documents?.transcriptOfRecords} target="_blank" rel="noopener noreferrer" className="hover:underline">
                                                     {app.documents?.transcriptOfRecords || '-'}
-                                                </a>
-                                            </td>
-                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
-                                                <a href={app.documents?.proofOfEnrolment} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                                    {app.documents?.proofOfEnrolment || '-'}
-                                                </a>
-                                            </td>
-                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
-                                                <a href={app.documents?.idPassportItem} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                                    {app.documents?.idPassportItem || '-'}
                                                 </a>
                                             </td>
                                             <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
