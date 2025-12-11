@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FileText, Upload, LogOut } from 'lucide-react';
+import { FileText, Upload, LogOut, ChevronDown, Check } from 'lucide-react';
 
 import logo from '../assets/favicon.png';
 
@@ -13,6 +13,7 @@ const Layout = ({ children }) => {
     const location = useLocation();
     const [scrollProgress, setScrollProgress] = useState(0);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isEditionOpen, setIsEditionOpen] = useState(false);
 
     const handleLogout = async () => {
         try {
@@ -55,19 +56,45 @@ const Layout = ({ children }) => {
                     <div className="flex items-center gap-6">
                         {/* Edition Selector */}
                         {editions.length > 0 && (
-                            <div className="hidden md:flex items-center gap-2">
-                                <span className="text-sm text-gray-500">Edition:</span>
-                                <select
-                                    value={currentEditionId || ''}
-                                    onChange={(e) => switchEdition(e.target.value)}
-                                    className="text-sm font-medium text-gray-900 bg-transparent border-none focus:ring-0 cursor-pointer py-1 pr-8"
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsEditionOpen(!isEditionOpen)}
+                                    className="flex items-center gap-2 hover:bg-gray-50 py-1.5 px-3 rounded-full border border-transparent hover:border-gray-200 transition-all focus:outline-none"
                                 >
-                                    {editions.map(edition => (
-                                        <option key={edition.id} value={edition.id}>
-                                            {edition.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                    <span className="text-sm text-gray-500">Edition:</span>
+                                    <span className="text-sm font-medium text-gray-900">
+                                        {editions.find(e => e.id === currentEditionId)?.name || 'Select Edition'}
+                                    </span>
+                                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isEditionOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {isEditionOpen && (
+                                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
+                                        <div className="px-2 py-1.5 border-b border-gray-100 mb-1">
+                                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2">Select Edition</p>
+                                        </div>
+                                        <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                            {editions.map(edition => (
+                                                <button
+                                                    key={edition.id}
+                                                    onClick={() => {
+                                                        switchEdition(edition.id);
+                                                        setIsEditionOpen(false);
+                                                    }}
+                                                    className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between group transition-colors ${currentEditionId === edition.id
+                                                        ? 'bg-esn-dark-blue/5 text-esn-dark-blue font-medium'
+                                                        : 'text-gray-700 hover:bg-gray-50'
+                                                        }`}
+                                                >
+                                                    <span>{edition.name}</span>
+                                                    {currentEditionId === edition.id && (
+                                                        <Check className="w-4 h-4 text-esn-dark-blue" />
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
