@@ -12,8 +12,7 @@ const Layout = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [scrollProgress, setScrollProgress] = useState(0);
-    const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [isEditionOpen, setIsEditionOpen] = useState(false);
+    const [activeDropdown, setActiveDropdown] = useState(null); // 'profile' | 'edition' | null
 
     const handleLogout = async () => {
         try {
@@ -38,6 +37,12 @@ const Layout = ({ children }) => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    useEffect(() => {
+        const handleClickOutside = () => setActiveDropdown(null);
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
+
 
 
     return (
@@ -58,17 +63,20 @@ const Layout = ({ children }) => {
                         {editions.length > 0 && (
                             <div className="relative">
                                 <button
-                                    onClick={() => setIsEditionOpen(!isEditionOpen)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveDropdown(activeDropdown === 'edition' ? null : 'edition');
+                                    }}
                                     className="flex items-center gap-2 hover:bg-gray-50 py-1.5 px-3 rounded-full border border-transparent hover:border-gray-200 transition-all focus:outline-none"
                                 >
                                     <span className="text-sm text-gray-500">Edition:</span>
                                     <span className="text-sm font-medium text-gray-900">
                                         {editions.find(e => e.id === currentEditionId)?.name || 'Select Edition'}
                                     </span>
-                                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isEditionOpen ? 'rotate-180' : ''}`} />
+                                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${activeDropdown === 'edition' ? 'rotate-180' : ''}`} />
                                 </button>
 
-                                {isEditionOpen && (
+                                {activeDropdown === 'edition' && (
                                     <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
                                         <div className="px-2 py-1.5 border-b border-gray-100 mb-1">
                                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2">Select Edition</p>
@@ -79,7 +87,7 @@ const Layout = ({ children }) => {
                                                     key={edition.id}
                                                     onClick={() => {
                                                         switchEdition(edition.id);
-                                                        setIsEditionOpen(false);
+                                                        setActiveDropdown(null);
                                                     }}
                                                     className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between group transition-colors ${currentEditionId === edition.id
                                                         ? 'bg-esn-dark-blue/5 text-esn-dark-blue font-medium'
@@ -101,7 +109,10 @@ const Layout = ({ children }) => {
                         {currentUser && (
                             <div className="relative">
                                 <button
-                                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveDropdown(activeDropdown === 'profile' ? null : 'profile');
+                                    }}
                                     className="flex items-center gap-2 hover:bg-gray-50 p-1.5 pr-3 rounded-full border border-transparent hover:border-gray-200 transition-all focus:outline-none"
                                 >
                                     {currentUser.photoURL ? (
@@ -121,7 +132,7 @@ const Layout = ({ children }) => {
                                     </span>
                                 </button>
 
-                                {isProfileOpen && (
+                                {activeDropdown === 'profile' && (
                                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
                                         <div className="px-4 py-3 border-b border-gray-100">
                                             <p className="text-sm font-medium text-gray-900 truncate">{currentUser.displayName}</p>
@@ -130,7 +141,7 @@ const Layout = ({ children }) => {
                                         <button
                                             onClick={() => {
                                                 navigate('/import');
-                                                setIsProfileOpen(false);
+                                                setActiveDropdown(null);
                                             }}
                                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
                                         >
