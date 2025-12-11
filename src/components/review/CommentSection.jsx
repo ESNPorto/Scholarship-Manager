@@ -55,7 +55,7 @@ const CommentSection = ({ comments = [], onAddComment, currentUser }) => {
                                 <button
                                     type="submit"
                                     disabled={!newComment.trim()}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-[#2e3192] rounded-full hover:bg-[#2e3192]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-white bg-esn-dark-blue rounded-full hover:bg-esn-dark-blue/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     Comment
                                 </button>
@@ -77,7 +77,7 @@ const CommentSection = ({ comments = [], onAddComment, currentUser }) => {
                                     className="w-10 h-10 rounded-full object-cover border border-gray-200"
                                 />
                             ) : (
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2e3192] to-[#00aeef] flex items-center justify-center text-white text-sm font-bold">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-esn-dark-blue to-esn-cyan flex items-center justify-center text-white text-sm font-bold">
                                     {comment.author ? comment.author.charAt(0).toUpperCase() : 'U'}
                                 </div>
                             )}

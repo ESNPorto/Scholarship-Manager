@@ -72,7 +72,7 @@ const Layout = ({ children }) => {
                                             className="w-8 h-8 rounded-full"
                                         />
                                     ) : (
-                                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                                        <div className="w-8 h-8 rounded-full bg-esn-dark-blue/10 flex items-center justify-center text-esn-dark-blue font-bold">
                                             {currentUser.email[0].toUpperCase()}
                                         </div>
                                     )}
@@ -106,10 +106,9 @@ const Layout = ({ children }) => {
             {!location.pathname.includes('/review/') && (
                 <div className="fixed top-16 left-0 right-0 z-40 h-2 bg-gray-100">
                     <div
-                        className="h-full transition-all duration-150"
+                        className="h-full transition-all duration-150 bg-esn-dark-blue"
                         style={{
-                            width: `${scrollProgress}%`,
-                            backgroundColor: '#2e3192'
+                            width: `${scrollProgress}%`
                         }}
                     />
                 </div>

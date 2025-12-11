@@ -100,7 +100,7 @@ const DocumentPreviewModal = ({ url, onClose }) => {
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#2e3192] bg-[#2e3192]/5 hover:bg-[#2e3192]/10 rounded-lg transition-colors border border-transparent hover:border-[#2e3192]/20"
+                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-esn-dark-blue bg-esn-dark-blue/5 hover:bg-esn-dark-blue/10 rounded-lg transition-colors border border-transparent hover:border-esn-dark-blue/20"
                             title="Open in new tab (Recommended if preview fails)"
                         >
                             <ExternalLink className="w-4 h-4" />
@@ -123,7 +123,7 @@ const DocumentPreviewModal = ({ url, onClose }) => {
                     {loading && !error && config.type !== 'external' && (
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
                             <div className="flex flex-col items-center gap-3">
-                                <Loader2 className="w-8 h-8 text-[#2e3192] animate-spin" />
+                                <Loader2 className="w-8 h-8 text-esn-dark-blue animate-spin" />
                                 <p className="text-sm text-gray-500">Loading preview...</p>
                             </div>
                         </div>
@@ -143,7 +143,7 @@ const DocumentPreviewModal = ({ url, onClose }) => {
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-5 py-2.5 bg-[#2e3192] text-white rounded-xl hover:bg-[#1a1c5e] transition-colors font-medium cursor-pointer shadow-sm shadow-[#2e3192]/20"
+                                className="px-5 py-2.5 bg-esn-dark-blue text-white rounded-xl hover:bg-esn-dark-blue/90 transition-colors font-medium cursor-pointer shadow-sm shadow-esn-dark-blue/20"
                             >
                                 Open Document Externally
                             </a>
@@ -197,7 +197,7 @@ const DocumentPreviewModal = ({ url, onClose }) => {
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-5 py-2.5 bg-[#2e3192] text-white rounded-xl hover:bg-[#1a1c5e] transition-colors font-medium shadow-sm shadow-[#2e3192]/20"
+                                className="px-5 py-2.5 bg-esn-dark-blue text-white rounded-xl hover:bg-esn-dark-blue/90 transition-colors font-medium shadow-sm shadow-esn-dark-blue/20"
                             >
                                 Open Document
                             </a>

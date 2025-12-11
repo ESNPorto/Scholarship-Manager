@@ -2,14 +2,15 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-:root {
-  /* ESN Color Palette */
-  --esn-cyan: #00aeef;
-  --esn-magenta: #ec008c;
-  --esn-green: #7ac143;
-  --esn-orange: #f47b20;
-  --esn-dark-blue: #2e3192;
+@theme {
+  --color-esn-cyan: #00aeef;
+  --color-esn-magenta: #ec008c;
+  --color-esn-green: #7ac143;
+  --color-esn-orange: #f47b20;
+  --color-esn-dark-blue: #2e3192;
+}
 
+:root {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

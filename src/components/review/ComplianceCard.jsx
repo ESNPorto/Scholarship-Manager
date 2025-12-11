@@ -25,7 +25,7 @@ const ComplianceCard = ({ title, url, verified, onVerify, onPreview, type }) => 
                 {/* Action */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onVerify(); }}
-                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${verified ? 'bg-[#7ac143]/10 text-[#7ac143]' : 'bg-gray-100 text-gray-400 hover:bg-[#7ac143]/10 hover:text-[#7ac143]'}`}
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${verified ? 'bg-esn-green/10 text-esn-green' : 'bg-gray-100 text-gray-400 hover:bg-esn-green/10 hover:text-esn-green'}`}
                 >
                     {verified ? <CheckCircle2 className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
                 </button>

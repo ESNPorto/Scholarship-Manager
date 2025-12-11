@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
+import { ESN_COLORS } from '../constants/colors';
 
-// ESN Color Palette
-const COLORS = ['#00aeef', '#ec008c', '#7ac143', '#f47b20', '#2e3192'];
+// ESN Color Palette defined in constants
+const COLORS = [ESN_COLORS.CYAN, ESN_COLORS.MAGENTA, ESN_COLORS.GREEN, ESN_COLORS.ORANGE, ESN_COLORS.DARK_BLUE];
 
 import { Users, FileCheck, Hourglass } from 'lucide-react';
 
@@ -59,8 +60,8 @@ const DashboardCharts = ({ applications, stats }) => {
                                 paddingAngle={5}
                                 dataKey="value"
                             >
-                                <Cell fill="#7ac143" /> {/* Reviewed - ESN Green */}
-                                <Cell fill="#2e3192" /> {/* Pending - ESN Dark Blue */}
+                                <Cell fill={ESN_COLORS.GREEN} /> {/* Reviewed - ESN Green */}
+                                <Cell fill={ESN_COLORS.DARK_BLUE} /> {/* Pending - ESN Dark Blue */}
                             </Pie>
                             <Tooltip
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
@@ -106,7 +107,7 @@ const DashboardCharts = ({ applications, stats }) => {
                             />
                             <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
                                 {chartData.destinations.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill="#2e3192" />
+                                    <Cell key={`cell-${index}`} fill={ESN_COLORS.DARK_BLUE} />
                                 ))}
                             </Bar>
                         </BarChart>

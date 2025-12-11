@@ -3,7 +3,7 @@ import { FileText, CreditCard, FileSpreadsheet, FileCheck, FileBarChart, Mic } f
 
 const DocumentIcon = ({ type }) => {
     // All icons use ESN Dark Blue for simplicity and consistency
-    const iconColor = "text-[#2e3192]";
+    const iconColor = "text-esn-dark-blue";
 
     switch (type) {
         case 'iban': return <CreditCard className={`w-6 h-6 ${iconColor}`} />;

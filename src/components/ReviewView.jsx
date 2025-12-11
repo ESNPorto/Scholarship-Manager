@@ -39,7 +39,7 @@ const ReviewView = () => {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2e3192]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-esn-dark-blue"></div>
             </div>
         );
     }
@@ -110,7 +110,7 @@ const ReviewView = () => {
             {/* Top Progress Bar (Hijacks the scroll bar position) */}
             <div className="fixed top-16 left-0 right-0 h-2 bg-gray-100 z-40">
                 <div
-                    className="h-full bg-[#2e3192] transition-all duration-500"
+                    className="h-full bg-esn-dark-blue transition-all duration-500"
                     style={{ width: `${progress}%` }}
                 />
             </div>
@@ -124,7 +124,7 @@ const ReviewView = () => {
                         <div>
                             <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-3">{application.name}</h1>
                             <div className="flex flex-wrap gap-3 text-sm">
-                                <span className="px-3 py-1 rounded-full bg-[#2e3192]/10 text-[#2e3192] font-medium flex items-center gap-1.5">
+                                <span className="px-3 py-1 rounded-full bg-esn-dark-blue/10 text-esn-dark-blue font-medium flex items-center gap-1.5">
                                     <GraduationCap className="w-4 h-4" /> {application.course}
                                 </span>
                                 <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1.5">
@@ -223,7 +223,7 @@ const ReviewView = () => {
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-[#f47b20]/10 flex items-center justify-center text-[#f47b20]">
+                                        <div className="w-10 h-10 rounded-lg bg-esn-orange/10 flex items-center justify-center text-esn-orange">
                                             <User className="w-5 h-5" />
                                         </div>
                                         <h3 className="font-bold text-lg text-gray-900">Overall Fit & Impression</h3>
@@ -234,7 +234,7 @@ const ReviewView = () => {
                                     <div className="flex-1 relative h-10 flex items-center">
                                         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full transition-all duration-300 rounded-full bg-[#2e3192]"
+                                                className="h-full transition-all duration-300 rounded-full bg-esn-dark-blue"
                                                 style={{ width: `${((review.fit || 0) / 25) * 100}%` }}
                                             />
                                         </div>
@@ -266,7 +266,7 @@ const ReviewView = () => {
                 <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
                     <div className="flex flex-col">
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Score</span>
-                        <span className="text-3xl font-bold tabular-nums tracking-tight leading-none" style={{ color: '#2e3192' }}>
+                        <span className="text-3xl font-bold tabular-nums tracking-tight leading-none text-esn-dark-blue">
                             {totalScore}<span className="text-sm text-gray-400 font-normal ml-1">/100</span>
                         </span>
                     </div>

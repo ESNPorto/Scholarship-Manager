@@ -73,7 +73,7 @@ export default function Login() {
                         <button
                             onClick={handleLogin}
                             disabled={isLoading}
-                            className="group relative w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="group relative w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-esn-dark-blue transition-all shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {isLoading ? (
                                 <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

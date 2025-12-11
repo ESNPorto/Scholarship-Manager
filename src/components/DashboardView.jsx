@@ -115,13 +115,13 @@ const DashboardView = () => {
         switch (status) {
             case 'reviewed':
                 return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border" style={{ backgroundColor: 'rgba(122, 193, 67, 0.1)', color: '#5a9632', borderColor: 'rgba(122, 193, 67, 0.3)' }}>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-esn-green/10 text-esn-green border-esn-green/30">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Reviewed
                     </span>
                 );
             case 'in_progress':
                 return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border" style={{ backgroundColor: 'rgba(244, 123, 32, 0.1)', color: '#c4620f', borderColor: 'rgba(244, 123, 32, 0.3)' }}>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-esn-orange/10 text-esn-orange border-esn-orange/30">
                         <Clock className="w-3.5 h-3.5" /> In Progress
                     </span>
                 );
@@ -135,9 +135,9 @@ const DashboardView = () => {
     };
 
     const RankIcon = ({ rank }) => {
-        if (rank === 1) return <Trophy className="w-5 h-5 text-yellow-500 drop-shadow-sm" />;
+        if (rank === 1) return <Trophy className="w-5 h-5 text-gray-400 drop-shadow-sm" />;
         if (rank === 2) return <Medal className="w-5 h-5 text-gray-400 drop-shadow-sm" />;
-        if (rank === 3) return <Award className="w-5 h-5 text-orange-500 drop-shadow-sm" />;
+        if (rank === 3) return <Award className="w-5 h-5 text-gray-400 drop-shadow-sm" />;
         return <span className="text-sm font-bold text-gray-400">#{rank}</span>;
     };
 
@@ -159,7 +159,7 @@ const DashboardView = () => {
                     <input
                         type="text"
                         placeholder="Search candidates, universities..."
-                        className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00aeef]/20 focus:border-[#00aeef] transition-all text-sm font-medium text-gray-900 placeholder-gray-400"
+                        className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-esn-cyan/20 focus:border-esn-cyan transition-all text-sm font-medium text-gray-900 placeholder-gray-400"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -168,7 +168,7 @@ const DashboardView = () => {
                 <div className="flex gap-2 w-full sm:w-auto p-1 items-center">
                     <div className="relative">
                         <select
-                            className="appearance-none pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00aeef]/20 focus:border-[#00aeef] text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
+                            className="appearance-none pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-esn-cyan/20 focus:border-esn-cyan text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                         >
@@ -228,7 +228,7 @@ const DashboardView = () => {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ backgroundColor: 'rgba(46, 49, 146, 0.1)', color: '#2e3192' }}>
+                                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 bg-esn-dark-blue/10 text-esn-dark-blue">
                                                 {app.name.charAt(0)}
                                             </div>
                                             <span className="font-semibold text-gray-900">{app.name}</span>
@@ -239,7 +239,7 @@ const DashboardView = () => {
                                         {app.destinationCity}, <span className="text-gray-400">{app.destinationCountry}</span>
                                     </td>
                                     <td className="px-6 py-4 text-center">
-                                        <span className="text-lg font-bold tabular-nums tracking-tight" style={{ color: app.score >= 75 ? '#7ac143' : app.score >= 50 ? '#2e3192' : '#f47b20' }}>{app.score}</span>
+                                        <span className={`text-lg font-bold tabular-nums tracking-tight ${app.score >= 75 ? 'text-esn-green' : app.score >= 50 ? 'text-esn-dark-blue' : 'text-esn-orange'}`}>{app.score}</span>
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <StatusBadge status={app.status} />

@@ -18,7 +18,7 @@ const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, 
             {/* Header */}
             <div className="p-5 flex items-start justify-between gap-4 border-b border-gray-50">
                 <div className="flex items-center gap-4 flex-1">
-                    <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#2e3192]/5">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-esn-dark-blue/5">
                         <DocumentIcon type={type} />
                     </div>
                     <div>
@@ -35,7 +35,7 @@ const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, 
 
                 <button
                     onClick={onVerify}
-                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${verified ? 'bg-[#7ac143]/10 text-[#7ac143]' : 'bg-gray-100 text-gray-400 hover:bg-[#7ac143]/10 hover:text-[#7ac143]'}`}
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${verified ? 'bg-esn-green/10 text-esn-green' : 'bg-gray-100 text-gray-400 hover:bg-esn-green/10 hover:text-esn-green'}`}
                 >
                     {verified ? <CheckCircle2 className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
                 </button>
@@ -46,7 +46,7 @@ const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, 
                 <div className="flex items-end justify-between mb-2">
                     <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Score</span>
                     <div className="text-right">
-                        <span className="text-sm font-bold mr-2 text-[#2e3192]">{label}</span>
+                        <span className="text-sm font-bold mr-2 text-esn-dark-blue">{label}</span>
                         <span className="text-2xl font-bold text-gray-900 tabular-nums">{score || 0}</span>
                         <span className="text-gray-400 text-sm font-medium">/{maxScore}</span>
                     </div>
@@ -55,7 +55,7 @@ const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, 
                 <div className="relative h-10 flex items-center">
                     <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
-                            className="h-full transition-all duration-300 rounded-full bg-[#2e3192]"
+                            className="h-full transition-all duration-300 rounded-full bg-esn-dark-blue"
                             style={{ width: `${((score || 0) / maxScore) * 100}%` }}
                         />
                     </div>
