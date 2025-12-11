@@ -21,7 +21,7 @@ export const mapApplicationData = (rawData) => {
         if (!row['Nome'] && !row['E-mail']) return null;
 
         return {
-            id: index + 1, // Simple ID based on row index
+            id: row['E-mail'].trim().toLowerCase(), // Stable ID based on normalized email
             timestamp: row['Timestamp'],
             email: row['E-mail'],
             name: row['Nome'],

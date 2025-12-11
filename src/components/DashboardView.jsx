@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { calculateScore } from '../utils/scoring';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Trophy, Medal, Award, FileDown, Download } from 'lucide-react';
 import Papa from 'papaparse';
@@ -14,23 +15,13 @@ const DashboardView = () => {
 
 
 
-    // --- Helper: Calculate Score ---
-    const getScore = (id) => {
-        const review = reviews[id];
-        if (!review) return 0;
-        const motivation = Number(review.motivation || 0);
-        const academic = Number(review.academic || 0);
-        const presentation = Number(review.presentation || 0);
-        const fit = Number(review.fit || 0);
-        return motivation + academic + presentation + fit;
-    };
 
     // --- Derived Data: Applications with Scores & Ranks ---
     const processedApplications = useMemo(() => {
         // 1. Attach scores
         const withScores = applications.map(app => ({
             ...app,
-            score: getScore(app.id),
+            score: calculateScore(reviews[app.id]),
             status: getReviewStatus(app.id)
         }));
 

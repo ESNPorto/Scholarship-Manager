@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
+import { calculateScore } from '../utils/scoring';
 import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, FileText, CheckCircle2, Circle, Calendar, MapPin, GraduationCap, Mail, Home, Send, User, Clock, ChevronDown, ChevronUp, Eye, FileCheck, FileBarChart, Mic, CreditCard, FileSpreadsheet } from 'lucide-react';
@@ -373,7 +374,7 @@ const ReviewView = () => {
 
     // --- Derived State ---
 
-    const totalScore = Number(review.motivation || 0) + Number(review.academic || 0) + Number(review.presentation || 0) + Number(review.fit || 0);
+    const totalScore = calculateScore(review);
     const verifiedCount = Object.values(review.verifiedDocs || {}).filter(Boolean).length;
     const totalDocs = 6; // Fixed number of checks
     const progress = Math.round((verifiedCount / totalDocs) * 100);
