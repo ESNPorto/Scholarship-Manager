@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Users, FileCheck, Hourglass, Trophy, Medal, Award, FileDown, Download } from 'lucide-react';
+import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Trophy, Medal, Award, FileDown, Download } from 'lucide-react';
 import Papa from 'papaparse';
 import DashboardCharts from './DashboardCharts';
 
@@ -120,13 +120,13 @@ const DashboardView = () => {
         switch (status) {
             case 'reviewed':
                 return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border" style={{ backgroundColor: 'rgba(122, 193, 67, 0.1)', color: '#5a9632', borderColor: 'rgba(122, 193, 67, 0.3)' }}>
                         <CheckCircle2 className="w-3.5 h-3.5" /> Reviewed
                     </span>
                 );
             case 'in_progress':
                 return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-100">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border" style={{ backgroundColor: 'rgba(244, 123, 32, 0.1)', color: '#c4620f', borderColor: 'rgba(244, 123, 32, 0.3)' }}>
                         <Clock className="w-3.5 h-3.5" /> In Progress
                     </span>
                 );
@@ -150,7 +150,7 @@ const DashboardView = () => {
         return (
             <div className="text-center py-32 animate-in fade-in zoom-in duration-500">
                 <div className="bg-white p-12 rounded-3xl shadow-xl shadow-gray-200/50 inline-block max-w-md border border-gray-100">
-                    <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner" style={{ backgroundColor: 'rgba(0, 174, 239, 0.1)', color: '#00aeef' }}>
                         <Upload className="w-10 h-10" />
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-3 tracking-tight">No Applications Loaded</h2>
@@ -165,55 +165,17 @@ const DashboardView = () => {
 
     return (
         <div className="space-y-8">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="bg-blue-50 p-3 rounded-xl text-blue-600">
-                            <Users className="w-6 h-6" />
-                        </div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Total</span>
-                    </div>
-                    <div className="text-4xl font-bold text-gray-900 tracking-tight">{stats.total}</div>
-                    <div className="text-sm text-gray-500 mt-1 font-medium">Applications received</div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="bg-green-50 p-3 rounded-xl text-green-600">
-                            <FileCheck className="w-6 h-6" />
-                        </div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Reviewed</span>
-                    </div>
-                    <div className="text-4xl font-bold text-gray-900 tracking-tight">{stats.reviewed}</div>
-                    <div className="text-sm text-gray-500 mt-1 font-medium">
-                        {Math.round((stats.reviewed / stats.total) * 100) || 0}% completion rate
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="bg-orange-50 p-3 rounded-xl text-orange-600">
-                            <Hourglass className="w-6 h-6" />
-                        </div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Pending</span>
-                    </div>
-                    <div className="text-4xl font-bold text-gray-900 tracking-tight">{stats.pending}</div>
-                    <div className="text-sm text-gray-500 mt-1 font-medium">Applications remaining</div>
-                </div>
-            </div>
-
-            {/* Charts Section */}
-            <DashboardCharts applications={applications} />
+            {/* Charts & Stats Section */}
+            <DashboardCharts applications={applications} stats={stats} />
 
             {/* Filters and Search */}
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
                 <div className="relative w-full sm:w-96 group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors" style={{ '--tw-text-opacity': 1 }} />
                     <input
                         type="text"
                         placeholder="Search candidates, universities..."
-                        className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium text-gray-900 placeholder-gray-400"
+                        className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00aeef]/20 focus:border-[#00aeef] transition-all text-sm font-medium text-gray-900 placeholder-gray-400"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -222,7 +184,7 @@ const DashboardView = () => {
                 <div className="flex gap-2 w-full sm:w-auto p-1 items-center">
                     <div className="relative">
                         <select
-                            className="appearance-none pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
+                            className="appearance-none pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00aeef]/20 focus:border-[#00aeef] text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                         >
@@ -273,7 +235,7 @@ const DashboardView = () => {
                                 <tr
                                     key={app.id}
                                     onClick={() => navigateToReview(app.id)}
-                                    className="hover:bg-blue-50/30 transition-colors group cursor-pointer"
+                                    className="hover:bg-gray-100/50 transition-colors group cursor-pointer"
                                 >
                                     <td className="px-6 py-4 text-center">
                                         <div className="flex justify-center items-center">
@@ -282,7 +244,7 @@ const DashboardView = () => {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ backgroundColor: 'rgba(46, 49, 146, 0.1)', color: '#2e3192' }}>
                                                 {app.name.charAt(0)}
                                             </div>
                                             <span className="font-semibold text-gray-900">{app.name}</span>
@@ -293,10 +255,7 @@ const DashboardView = () => {
                                         {app.destinationCity}, <span className="text-gray-400">{app.destinationCountry}</span>
                                     </td>
                                     <td className="px-6 py-4 text-center">
-                                        <span className={`text-lg font-bold tabular-nums tracking-tight ${app.score >= 75 ? 'text-green-600' :
-                                            app.score >= 50 ? 'text-blue-600' :
-                                                'text-orange-500'
-                                            }`}>{app.score}</span>
+                                        <span className="text-lg font-bold tabular-nums tracking-tight" style={{ color: app.score >= 75 ? '#7ac143' : app.score >= 50 ? '#2e3192' : '#f47b20' }}>{app.score}</span>
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <StatusBadge status={app.status} />

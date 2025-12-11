@@ -1,12 +1,15 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'];
+// ESN Color Palette
+const COLORS = ['#00aeef', '#ec008c', '#7ac143', '#f47b20', '#2e3192'];
 
-const DashboardCharts = ({ applications }) => {
+import { Users, FileCheck, Hourglass } from 'lucide-react';
+
+const DashboardCharts = ({ applications, stats }) => {
     // --- Data Processing for Charts ---
     const chartData = useMemo(() => {
-        if (!applications.length) return { destinations: [], universities: [] };
+        if (!applications.length) return { destinations: [], overview: [] };
 
         // 1. Top Destinations
         const destinationCounts = {};
@@ -20,26 +23,57 @@ const DashboardCharts = ({ applications }) => {
             .sort((a, b) => b.value - a.value)
             .slice(0, 5); // Top 5
 
-        // 2. Applicants by University
-        const uniCounts = {};
-        applications.forEach(app => {
-            let uni = app.university || 'Unknown';
-            // Simple normalization to avoid duplicates if needed, or just take raw
-            uniCounts[uni] = (uniCounts[uni] || 0) + 1;
-        });
+        // 2. Overview Data (Reviewed vs Pending)
+        const overview = [
+            { name: 'Reviewed', value: stats.reviewed },
+            { name: 'Pending', value: stats.pending }
+        ];
 
-        const universities = Object.entries(uniCounts)
-            .map(([name, value]) => ({ name, value }))
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 5); // Top 5, others could be grouped but keeping simple for now
-
-        return { destinations, universities };
-    }, [applications]);
+        return { destinations, overview };
+    }, [applications, stats]);
 
     if (applications.length === 0) return null;
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Overview Chart */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                <h3 className="text-lg font-bold text-gray-900 mb-6">Overview</h3>
+                <div className="h-64 w-full relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={chartData.overview}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={5}
+                                dataKey="value"
+                            >
+                                <Cell fill="#7ac143" /> {/* Reviewed - ESN Green */}
+                                <Cell fill="#2e3192" /> {/* Pending - ESN Dark Blue */}
+                            </Pie>
+                            <Tooltip
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                            />
+                            <Legend
+                                verticalAlign="bottom"
+                                height={36}
+                                iconType="circle"
+                                iconSize={8}
+                                wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }}
+                            />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    {/* Centered Total Label */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
+                        <span className="text-3xl font-bold text-gray-900">{stats.total}</span>
+                        <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">Total</span>
+                    </div>
+                </div>
+            </div>
+
             {/* Top Destinations Chart */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
                 <h3 className="text-lg font-bold text-gray-900 mb-6">Top Destinations</h3>
@@ -64,49 +98,10 @@ const DashboardCharts = ({ applications }) => {
                             />
                             <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
                                 {chartData.destinations.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill="#6366f1" />
+                                    <Cell key={`cell-${index}`} fill="#2e3192" />
                                 ))}
                             </Bar>
                         </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
-
-            {/* Applicants by University Chart */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-                <h3 className="text-lg font-bold text-gray-900 mb-6">Applicants by University</h3>
-                <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                data={chartData.universities}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={60}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="value"
-                            >
-                                {chartData.universities.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <Tooltip
-                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                            />
-                            <Legend
-                                verticalAlign="bottom"
-                                height={36}
-                                iconType="circle"
-                                iconSize={8}
-                                wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }}
-                                formatter={(value) => (
-                                    <span title={value} className="text-gray-600 font-medium">
-                                        {value.length > 15 ? `${value.substring(0, 15)}...` : value}
-                                    </span>
-                                )}
-                            />
-                        </PieChart>
                     </ResponsiveContainer>
                 </div>
             </div>
