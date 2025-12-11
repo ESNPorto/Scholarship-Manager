@@ -1,38 +1,52 @@
 import { db } from '../firebase';
 import { doc, setDoc, onSnapshot, collection, updateDoc, deleteDoc, arrayUnion, writeBatch, getDocs, where, query } from 'firebase/firestore';
 
-export const subscribeToReviews = (callback) => {
-    const unsubscribe = onSnapshot(collection(db, 'reviews'), (snapshot) => {
+export const subscribeToReviews = (editionId, callback) => {
+    if (!editionId) return () => {};
+
+    const q = query(
+        collection(db, 'reviews'), 
+        where('editionId', '==', editionId)
+    );
+
+    return onSnapshot(q, (snapshot) => {
         const reviewsData = {};
         snapshot.forEach((doc) => {
             reviewsData[doc.id] = doc.data();
         });
         callback(reviewsData);
     });
-    return unsubscribe;
 };
 
-export const saveReviewToDb = async (applicationId, reviewData) => {
+export const saveReviewToDb = async (applicationId, reviewData, editionId) => {
     try {
         const reviewRef = doc(db, 'reviews', String(applicationId));
-        await setDoc(reviewRef, {
+        const dataToSave = {
             ...reviewData,
             lastUpdated: new Date().toISOString()
-        }, { merge: true });
+        };
+        if (editionId) {
+            dataToSave.editionId = editionId;
+        }
+        await setDoc(reviewRef, dataToSave, { merge: true });
     } catch (error) {
         console.error("Error saving review:", error);
         throw error;
     }
 };
 
-export const saveCommentToDb = async (applicationId, comment) => {
+export const saveCommentToDb = async (applicationId, comment, editionId) => {
     try {
         const reviewRef = doc(db, 'reviews', String(applicationId));
         // Use arrayUnion to atomically add the comment
-        await setDoc(reviewRef, {
+        const dataToSave = {
             comments: arrayUnion(comment),
             lastUpdated: new Date().toISOString()
-        }, { merge: true });
+        };
+        if (editionId) {
+            dataToSave.editionId = editionId;
+        }
+        await setDoc(reviewRef, dataToSave, { merge: true });
     } catch (error) {
         console.error("Error saving comment:", error);
         throw error;
@@ -125,6 +139,7 @@ export const batchSaveApplications = async (editionId, applications) => {
                     const reviewRef = doc(collection(db, 'reviews'), app.id);
                     batch.set(reviewRef, {
                         ...review,
+                        editionId: editionId,
                         lastUpdated: new Date().toISOString()
                     }, { merge: true });
                 }

@@ -39,11 +39,11 @@ export const AppProvider = ({ children }) => {
 
     // Subscribe to reviews from Firestore
     useEffect(() => {
-        const unsubscribe = subscribeToReviews((newReviews) => {
+        const unsubscribe = subscribeToReviews(currentEditionId, (newReviews) => {
             setReviews(newReviews);
         });
         return () => unsubscribe();
-    }, []);
+    }, [currentEditionId]);
 
     const loadApplications = async (editionId) => {
         setIsLoading(true);
@@ -92,7 +92,7 @@ export const AppProvider = ({ children }) => {
 
         // Save to DB
         try {
-            await saveReviewToDb(id, reviewData);
+            await saveReviewToDb(id, reviewData, currentEditionId);
         } catch (err) {
             console.error("Failed to save review to DB:", err);
             // Revert or show error? For now just log.
@@ -117,7 +117,7 @@ export const AppProvider = ({ children }) => {
 
         // Save to DB
         try {
-            await saveCommentToDb(id, comment);
+            await saveCommentToDb(id, comment, currentEditionId);
         } catch (err) {
             console.error("Failed to save comment to DB:", err);
             // In a real app we might want to revert the optimistic update or show a toast
