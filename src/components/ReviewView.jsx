@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, FileText, CheckCircle2, Circle, Calendar, MapPin, GraduationCap, Mail, Home, Send, User, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, CheckCircle2, Circle, Calendar, MapPin, GraduationCap, Mail, Home, Send, User, Clock, ChevronDown, ChevronUp, Eye } from 'lucide-react';
+import DocumentPreviewModal from './DocumentPreviewModal';
 
 // --- Helper Components ---
 
-const ComplianceRow = ({ title, url, verified, onVerify }) => {
+const ComplianceRow = ({ title, url, verified, onVerify, onPreview }) => {
     if (!url) return null;
     return (
         <div className="flex items-center justify-between py-4">
@@ -17,19 +18,21 @@ const ComplianceRow = ({ title, url, verified, onVerify }) => {
                     {title}
                 </span>
             </div>
-            <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-            >
-                Open
-            </a>
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={() => onPreview(url)}
+                    className="text-sm font-medium transition-colors flex items-center gap-1.5 hover:bg-gray-50 px-3 py-1.5 rounded-lg"
+                    style={{ color: '#2e3192' }}
+                >
+                    <Eye className="w-4 h-4" />
+                    Preview
+                </button>
+            </div>
         </div>
     );
 };
 
-const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, maxScore = 25 }) => {
+const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, maxScore = 25, onPreview }) => {
     return (
         <div className="py-6 border-b border-gray-100 last:border-b-0">
             {/* Header Row */}
@@ -41,15 +44,14 @@ const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, 
                     <span className="text-base font-semibold text-gray-900">{title}</span>
                 </div>
                 {url && (
-                    <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-medium transition-colors"
+                    <button
+                        onClick={() => onPreview(url)}
+                        className="text-sm font-medium transition-colors flex items-center gap-1.5 hover:bg-gray-50 px-3 py-1.5 rounded-lg"
                         style={{ color: '#2e3192' }}
                     >
-                        Open Document →
-                    </a>
+                        <Eye className="w-4 h-4" />
+                        Preview
+                    </button>
                 )}
             </div>
 
@@ -148,6 +150,7 @@ const CommentSection = ({ comments = [], onAddComment }) => {
 const ReviewView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [previewDoc, setPreviewDoc] = useState(null);
     const {
         applications,
         reviews,
@@ -262,18 +265,21 @@ const ReviewView = () => {
                         url={application.documents?.iban}
                         verified={review.verifiedDocs?.iban}
                         onVerify={() => toggleDocumentVerification('iban')}
+                        onPreview={setPreviewDoc}
                     />
                     <ComplianceRow
                         title="IRS Declaration"
                         url={application.documents?.irs}
                         verified={review.verifiedDocs?.irs}
                         onVerify={() => toggleDocumentVerification('irs')}
+                        onPreview={setPreviewDoc}
                     />
                     <ComplianceRow
                         title="Learning Agreement"
                         url={application.documents?.learningAgreement}
                         verified={review.verifiedDocs?.learningAgreement}
                         onVerify={() => toggleDocumentVerification('learningAgreement')}
+                        onPreview={setPreviewDoc}
                     />
                 </div>
             </div>
@@ -289,6 +295,7 @@ const ReviewView = () => {
                     onVerify={() => toggleDocumentVerification('motivation')}
                     score={review.motivation}
                     onScoreChange={(val) => handleScoreChange('motivation', val)}
+                    onPreview={setPreviewDoc}
                 />
 
                 <EvaluationCard
@@ -298,6 +305,7 @@ const ReviewView = () => {
                     onVerify={() => toggleDocumentVerification('records')}
                     score={review.academic}
                     onScoreChange={(val) => handleScoreChange('academic', val)}
+                    onPreview={setPreviewDoc}
                 />
 
                 <EvaluationCard
@@ -307,6 +315,7 @@ const ReviewView = () => {
                     onVerify={() => toggleDocumentVerification('presentation')}
                     score={review.presentation}
                     onScoreChange={(val) => handleScoreChange('presentation', val)}
+                    onPreview={setPreviewDoc}
                 />
 
                 {/* Overall Fit (No doc) */}
@@ -371,6 +380,11 @@ const ReviewView = () => {
                     </div>
                 </div>
             </div>
+
+            <DocumentPreviewModal
+                url={previewDoc}
+                onClose={() => setPreviewDoc(null)}
+            />
 
         </div>
     );
