@@ -198,7 +198,7 @@ const ReviewView = () => {
                             <ComplianceCard
                                 title="IBAN Proof"
                                 type="iban"
-                                url={application.documents?.iban}
+                                url={application.documents?.proofOfIban}
                                 verified={review.verifiedDocs?.iban}
                                 onVerify={() => toggleDocumentVerification('iban')}
                                 onPreview={setPreviewDoc}
@@ -225,7 +225,7 @@ const ReviewView = () => {
                             <MultiEvaluationCard
                                 title="Motivation Letter"
                                 type="motivation"
-                                url={application.documents?.motivation}
+                                url={application.documents?.motivationLetter}
                                 verified={review.verifiedDocs?.motivation}
                                 onVerify={() => toggleDocumentVerification('motivation')}
                                 scores={review.motivation || {}}
