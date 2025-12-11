@@ -1,68 +1,114 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, FileText, CheckCircle2, Circle, Calendar, MapPin, GraduationCap, Mail, Home, Send, User, Clock, ChevronDown, ChevronUp, Eye } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, CheckCircle2, Circle, Calendar, MapPin, GraduationCap, Mail, Home, Send, User, Clock, ChevronDown, ChevronUp, Eye, FileCheck, FileBarChart, Mic, CreditCard, FileSpreadsheet } from 'lucide-react';
 import DocumentPreviewModal from './DocumentPreviewModal';
 
 // --- Helper Components ---
 
-const ComplianceRow = ({ title, url, verified, onVerify, onPreview }) => {
+const DocumentIcon = ({ type }) => {
+    // All icons use ESN Dark Blue for simplicity and consistency
+    const iconColor = "text-[#2e3192]";
+
+    switch (type) {
+        case 'iban': return <CreditCard className={`w-6 h-6 ${iconColor}`} />;
+        case 'irs': return <FileSpreadsheet className={`w-6 h-6 ${iconColor}`} />;
+        case 'learningAgreement': return <FileCheck className={`w-6 h-6 ${iconColor}`} />;
+        case 'motivation': return <FileText className={`w-6 h-6 ${iconColor}`} />;
+        case 'records': return <FileBarChart className={`w-6 h-6 ${iconColor}`} />;
+        case 'presentation': return <Mic className={`w-6 h-6 ${iconColor}`} />;
+        default: return <FileText className={`w-6 h-6 ${iconColor}`} />;
+    }
+};
+
+const ComplianceCard = ({ title, url, verified, onVerify, onPreview, type }) => {
     if (!url) return null;
     return (
-        <div className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-3 overflow-hidden cursor-pointer" onClick={onVerify}>
-                <button className="flex-shrink-0 transition-colors" style={{ color: verified ? '#7ac143' : '#d1d5db' }}>
-                    {verified ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
-                </button>
-                <span className="text-sm font-medium" style={{ color: verified ? '#7ac143' : '#1f2937' }}>
-                    {title}
-                </span>
-            </div>
-            <div className="flex items-center gap-2">
+        <div
+            className="group relative bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-200 overflow-hidden hover:shadow-md"
+        >
+            <div className="p-4 flex items-center gap-4">
+                {/* Icon Box */}
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-50">
+                    <DocumentIcon type={type} />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onPreview(url)}>
+                    <h3 className={`font-semibold text-base truncate ${verified ? 'text-gray-900' : 'text-gray-700'}`}>{title}</h3>
+                    <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                        <Eye className="w-3 h-3" /> View Document
+                    </p>
+                </div>
+
+                {/* Action */}
                 <button
-                    onClick={() => onPreview(url)}
-                    className="text-sm font-medium transition-colors flex items-center gap-1.5 hover:bg-gray-50 px-3 py-1.5 rounded-lg"
-                    style={{ color: '#2e3192' }}
+                    onClick={(e) => { e.stopPropagation(); onVerify(); }}
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${verified ? 'bg-[#7ac143]/10 text-[#7ac143]' : 'bg-gray-100 text-gray-400 hover:bg-[#7ac143]/10 hover:text-[#7ac143]'}`}
                 >
-                    <Eye className="w-4 h-4" />
-                    Preview
+                    {verified ? <CheckCircle2 className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
                 </button>
             </div>
         </div>
     );
 };
 
-const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, maxScore = 25, onPreview }) => {
+const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, maxScore = 25, onPreview, type }) => {
+    const getScoreLabel = (s, max) => {
+        const pct = s / max;
+        if (pct < 0.4) return 'Poor';
+        if (pct < 0.7) return 'Fair';
+        if (pct < 0.9) return 'Good';
+        return 'Excellent';
+    };
+
+    const label = getScoreLabel(score || 0, maxScore);
+
     return (
-        <div className="py-6 border-b border-gray-100 last:border-b-0">
-            {/* Header Row */}
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3 cursor-pointer" onClick={onVerify}>
-                    <button className="flex-shrink-0 transition-colors" style={{ color: verified ? '#7ac143' : '#d1d5db' }}>
-                        {verified ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
-                    </button>
-                    <span className="text-base font-semibold text-gray-900">{title}</span>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-200 hover:shadow-md">
+            {/* Header */}
+            <div className="p-5 flex items-start justify-between gap-4 border-b border-gray-50">
+                <div className="flex items-center gap-4 flex-1">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#2e3192]/5">
+                        <DocumentIcon type={type} />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-lg text-gray-900">{title}</h3>
+                        {url ? (
+                            <button onClick={() => onPreview(url)} className="text-sm text-gray-500 hover:text-gray-700 font-medium flex items-center gap-1 mt-0.5">
+                                <Eye className="w-3.5 h-3.5" /> View Document
+                            </button>
+                        ) : (
+                            <span className="text-sm text-gray-400 italic">No document attached</span>
+                        )}
+                    </div>
                 </div>
-                {url && (
-                    <button
-                        onClick={() => onPreview(url)}
-                        className="text-sm font-medium transition-colors flex items-center gap-1.5 hover:bg-gray-50 px-3 py-1.5 rounded-lg"
-                        style={{ color: '#2e3192' }}
-                    >
-                        <Eye className="w-4 h-4" />
-                        Preview
-                    </button>
-                )}
+
+                <button
+                    onClick={onVerify}
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${verified ? 'bg-[#7ac143]/10 text-[#7ac143]' : 'bg-gray-100 text-gray-400 hover:bg-[#7ac143]/10 hover:text-[#7ac143]'}`}
+                >
+                    {verified ? <CheckCircle2 className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
+                </button>
             </div>
 
-            {/* Slider Row */}
-            <div className="flex items-center gap-6">
-                <div className="flex-1 relative">
-                    <div className="h-1.5 bg-gray-100 rounded-full">
+            {/* Scoring Area */}
+            <div className="p-5 bg-gray-50/50 rounded-b-xl">
+                <div className="flex items-end justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Score</span>
+                    <div className="text-right">
+                        <span className="text-sm font-bold mr-2 text-[#2e3192]">{label}</span>
+                        <span className="text-2xl font-bold text-gray-900 tabular-nums">{score || 0}</span>
+                        <span className="text-gray-400 text-sm font-medium">/{maxScore}</span>
+                    </div>
+                </div>
+
+                <div className="relative h-10 flex items-center">
+                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
-                            className="h-full rounded-full transition-all duration-300"
-                            style={{ width: `${((score || 0) / maxScore) * 100}%`, backgroundColor: '#2e3192' }}
+                            className="h-full transition-all duration-300 rounded-full bg-[#2e3192]"
+                            style={{ width: `${((score || 0) / maxScore) * 100}%` }}
                         />
                     </div>
                     <input
@@ -71,12 +117,10 @@ const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, 
                         max={maxScore}
                         value={score || 0}
                         onChange={(e) => onScoreChange(parseInt(e.target.value))}
-                        className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
+                    {/* Tick marks could go here */}
                 </div>
-                <span className="text-2xl font-semibold tabular-nums w-16 text-right" style={{ color: '#f47b20' }}>
-                    {score || 0}<span className="text-sm text-gray-300 font-normal">/{maxScore}</span>
-                </span>
             </div>
         </div>
     );
@@ -95,17 +139,15 @@ const CommentSection = ({ comments = [], onAddComment, currentUser }) => {
     };
 
     return (
-        <div className="max-w-3xl mx-auto mt-8">
-
-
-            {/* Input Area - YouTube Style (Top) */}
+        <div className="mt-8">
+            {/* Input Area */}
             <div className="flex gap-4 mb-8">
                 <div className="flex-shrink-0">
                     {currentUser?.photoURL ? (
                         <img
                             src={currentUser.photoURL}
                             alt={currentUser.displayName}
-                            className="w-10 h-10 rounded-full object-cover"
+                            className="w-10 h-10 rounded-full object-cover border border-gray-200"
                         />
                     ) : (
                         <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm">
@@ -138,7 +180,7 @@ const CommentSection = ({ comments = [], onAddComment, currentUser }) => {
                                 <button
                                     type="submit"
                                     disabled={!newComment.trim()}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-[#065fd4] rounded-full hover:bg-[#065fd4]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-white bg-[#2e3192] rounded-full hover:bg-[#2e3192]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     Comment
                                 </button>
@@ -150,45 +192,99 @@ const CommentSection = ({ comments = [], onAddComment, currentUser }) => {
 
             {/* Comment List */}
             <div className="space-y-6">
-                {comments.length === 0 ? (
-                    null // Don't show empty state if input is right there, cleaner look
-                ) : (
-                    comments.map((comment, index) => (
-                        <div key={index} className="flex gap-4 group">
-                            {/* Avatar */}
-                            <div className="flex-shrink-0">
-                                {comment.authorPhoto ? (
-                                    <img
-                                        src={comment.authorPhoto}
-                                        alt={comment.author}
-                                        className="w-10 h-10 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2e3192] to-[#00aeef] flex items-center justify-center text-white text-sm font-bold">
-                                        {comment.author ? comment.author.charAt(0).toUpperCase() : 'U'}
-                                    </div>
-                                )}
+                {comments.map((comment, index) => (
+                    <div key={index} className="flex gap-4 group">
+                        <div className="flex-shrink-0">
+                            {comment.authorPhoto ? (
+                                <img
+                                    src={comment.authorPhoto}
+                                    alt={comment.author}
+                                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                                />
+                            ) : (
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2e3192] to-[#00aeef] flex items-center justify-center text-white text-sm font-bold">
+                                    {comment.author ? comment.author.charAt(0).toUpperCase() : 'U'}
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-semibold text-gray-900">
+                                    {comment.author || 'Unknown User'}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                    {new Date(comment.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </span>
                             </div>
-
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-sm font-semibold text-gray-900">
-                                        {comment.author || 'Unknown User'}
-                                    </span>
-                                    <span className="text-xs text-gray-500">
-                                        {new Date(comment.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    </span>
-                                </div>
-
-                                <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
-                                    {comment.text}
-                                </div>
+                            <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                                {comment.text}
                             </div>
                         </div>
-                    ))
-                )}
+                    </div>
+                ))}
             </div>
+        </div>
+    );
+};
+
+const StatusDropdown = ({ status, onStatusChange }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const options = [
+        { value: 'not_started', label: 'Not Started', color: '#f3f4f6', textColor: '#6b7280', borderColor: '#e5e7eb' },
+        { value: 'in_progress', label: 'In Progress', color: '#f47b20', textColor: '#ffffff', borderColor: '#f47b20' },
+        { value: 'reviewed', label: 'Reviewed', color: '#7ac143', textColor: '#ffffff', borderColor: '#7ac143' }
+    ];
+
+    const currentOption = options.find(o => o.value === status) || options[0];
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center justify-between gap-2 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide shadow-sm border transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#2e3192] whitespace-nowrap min-w-[160px]"
+                style={{
+                    backgroundColor: currentOption.color,
+                    color: currentOption.textColor,
+                    borderColor: currentOption.borderColor
+                }}
+            >
+                {currentOption.label}
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+                <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                    {options.map((option) => (
+                        <button
+                            key={option.value}
+                            onClick={() => {
+                                onStatusChange(option.value);
+                                setIsOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 group"
+                        >
+                            <div
+                                className="w-2 h-2 rounded-full transition-transform group-hover:scale-110"
+                                style={{ backgroundColor: option.value === 'not_started' ? '#9ca3af' : option.borderColor }}
+                            />
+                            <span className="text-gray-700">{option.label}</span>
+                            {status === option.value && <CheckCircle2 className="w-4 h-4 ml-auto text-[#2e3192]" />}
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
@@ -237,7 +333,18 @@ const ReviewView = () => {
             ...verifiedDocs,
             [docKey]: !verifiedDocs[docKey]
         };
-        updateReview(id, { verifiedDocs: newVerifiedDocs });
+
+        const updates = { verifiedDocs: newVerifiedDocs };
+
+        // Auto-update status to 'reviewed' if all 6 checks are complete
+        const newVerifiedCount = Object.values(newVerifiedDocs).filter(Boolean).length;
+        if (newVerifiedCount === 6) {
+            updates.status = 'reviewed';
+        } else if (getReviewStatus(id) === 'not_started') {
+            updates.status = 'in_progress';
+        }
+
+        updateReview(id, updates);
     };
 
     const handleAddComment = (text) => {
@@ -268,171 +375,184 @@ const ReviewView = () => {
 
     const totalScore = Number(review.motivation || 0) + Number(review.academic || 0) + Number(review.presentation || 0) + Number(review.fit || 0);
     const verifiedCount = Object.values(review.verifiedDocs || {}).filter(Boolean).length;
-    const totalDocs = Object.keys(application.documents || {}).length;
+    const totalDocs = 6; // Fixed number of checks
+    const progress = Math.round((verifiedCount / totalDocs) * 100);
 
     // --- Render ---
 
     return (
-        <div className="max-w-3xl mx-auto pb-32">
+        <div className="min-h-screen bg-gray-50/30 pb-32">
+            {/* Top Progress Bar (Hijacks the scroll bar position) */}
+            <div className="fixed top-16 left-0 right-0 h-2 bg-gray-100 z-40">
+                <div
+                    className="h-full bg-[#2e3192] transition-all duration-500"
+                    style={{ width: `${progress}%` }}
+                />
+            </div>
 
-            {/* 1. Header & Navigation */}
-            <div className="mb-8">
-                <button
-                    onClick={() => navigate('/')}
-                    className="mb-4 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-                >
-                    <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-                </button>
+            <div className="max-w-3xl mx-auto px-4 pt-8">
+                {/* 1. Header & Navigation */}
+                <div className="mb-8">
 
-                <div className="flex items-start justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">{application.name}</h1>
-                        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
-                            <span className="flex items-center gap-1.5"><Mail className="w-4 h-4 text-gray-400" /> {application.email}</span>
-                            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-gray-400" /> {application.birthDate}</span>
-                            <span className="flex items-center gap-1.5"><GraduationCap className="w-4 h-4 text-gray-400" /> {application.course} @ {application.university} ({application.year})</span>
-                            <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-gray-400" /> {application.destinationCity}</span>
+
+                    <div className="flex items-start justify-between gap-6">
+                        <div>
+                            <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-3">{application.name}</h1>
+                            <div className="flex flex-wrap gap-3 text-sm">
+                                <span className="px-3 py-1 rounded-full bg-[#2e3192]/10 text-[#2e3192] font-medium flex items-center gap-1.5">
+                                    <GraduationCap className="w-4 h-4" /> {application.course}
+                                </span>
+                                <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1.5">
+                                    <MapPin className="w-4 h-4" /> {application.destinationCity}
+                                </span>
+                                <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1.5">
+                                    <Home className="w-4 h-4" /> {application.university}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <span
-                        className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
-                        style={{
-                            color: getReviewStatus(id) === 'reviewed' ? '#7ac143'
-                                : getReviewStatus(id) === 'in_progress' ? '#f47b20'
-                                    : '#9ca3af'
-                        }}
-                    >
-                        {getReviewStatus(id).replace('_', ' ')}
-                    </span>
                 </div>
-            </div>
 
-            {/* 2. Comments Section (Moved here) */}
-            <div className="mb-10">
-                <CommentSection
-                    comments={review.comments}
-                    onAddComment={handleAddComment}
-                    currentUser={currentUser}
-                />
-            </div>
-
-            {/* 2. Compliance Checks (Non-scored docs) */}
-            <div className="mb-10">
-                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Compliance Checks</h2>
-                <div className="divide-y divide-gray-100">
-                    <ComplianceRow
-                        title="IBAN & Bank Details"
-                        url={application.documents?.iban}
-                        verified={review.verifiedDocs?.iban}
-                        onVerify={() => toggleDocumentVerification('iban')}
-                        onPreview={setPreviewDoc}
+                <div className="space-y-10">
+                    <CommentSection
+                        comments={review.comments}
+                        onAddComment={handleAddComment}
+                        currentUser={currentUser}
                     />
-                    <ComplianceRow
-                        title="IRS Declaration"
-                        url={application.documents?.irs}
-                        verified={review.verifiedDocs?.irs}
-                        onVerify={() => toggleDocumentVerification('irs')}
-                        onPreview={setPreviewDoc}
-                    />
-                    <ComplianceRow
-                        title="Learning Agreement"
-                        url={application.documents?.learningAgreement}
-                        verified={review.verifiedDocs?.learningAgreement}
-                        onVerify={() => toggleDocumentVerification('learningAgreement')}
-                        onPreview={setPreviewDoc}
-                    />
-                </div>
-            </div>
 
-            {/* 3. Evaluation Cards (Scored docs) */}
-            <div className="mb-10">
-                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Evaluation</h2>
-
-                <EvaluationCard
-                    title="Motivation Letter"
-                    url={application.documents?.motivation}
-                    verified={review.verifiedDocs?.motivation}
-                    onVerify={() => toggleDocumentVerification('motivation')}
-                    score={review.motivation}
-                    onScoreChange={(val) => handleScoreChange('motivation', val)}
-                    onPreview={setPreviewDoc}
-                />
-
-                <EvaluationCard
-                    title="Academic Records"
-                    url={application.documents?.records}
-                    verified={review.verifiedDocs?.records}
-                    onVerify={() => toggleDocumentVerification('records')}
-                    score={review.academic}
-                    onScoreChange={(val) => handleScoreChange('academic', val)}
-                    onPreview={setPreviewDoc}
-                />
-
-                <EvaluationCard
-                    title="Erasmus Presentation"
-                    url={application.documents?.presentation}
-                    verified={review.verifiedDocs?.presentation}
-                    onVerify={() => toggleDocumentVerification('presentation')}
-                    score={review.presentation}
-                    onScoreChange={(val) => handleScoreChange('presentation', val)}
-                    onPreview={setPreviewDoc}
-                />
-
-                {/* Overall Fit (No doc) */}
-                <div className="py-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <span className="text-base font-semibold text-gray-900">Overall Fit & Impression</span>
-                    </div>
-                    <div className="flex items-center gap-6">
-                        <div className="flex-1 relative">
-                            <div className="h-1.5 bg-gray-100 rounded-full">
-                                <div
-                                    className="h-full rounded-full transition-all duration-300"
-                                    style={{ width: `${((review.fit || 0) / 25) * 100}%`, backgroundColor: '#2e3192' }}
-                                />
-                            </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="25"
-                                value={review.fit || 0}
-                                onChange={(e) => handleScoreChange('fit', parseInt(e.target.value))}
-                                className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                    {/* Compliance Checks */}
+                    <div>
+                        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <FileCheck className="w-4 h-4 text-gray-400" />
+                            Compliance Documents
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <ComplianceCard
+                                title="IBAN Proof"
+                                type="iban"
+                                url={application.documents?.iban}
+                                verified={review.verifiedDocs?.iban}
+                                onVerify={() => toggleDocumentVerification('iban')}
+                                onPreview={setPreviewDoc}
+                            />
+                            <ComplianceCard
+                                title="IRS Declaration"
+                                type="irs"
+                                url={application.documents?.irs}
+                                verified={review.verifiedDocs?.irs}
+                                onVerify={() => toggleDocumentVerification('irs')}
+                                onPreview={setPreviewDoc}
+                            />
+                            <ComplianceCard
+                                title="Learning Agreement"
+                                type="learningAgreement"
+                                url={application.documents?.learningAgreement}
+                                verified={review.verifiedDocs?.learningAgreement}
+                                onVerify={() => toggleDocumentVerification('learningAgreement')}
+                                onPreview={setPreviewDoc}
                             />
                         </div>
-                        <span className="text-2xl font-semibold tabular-nums w-16 text-right" style={{ color: '#f47b20' }}>
-                            {review.fit || 0}<span className="text-sm text-gray-300 font-normal">/25</span>
-                        </span>
+                    </div>
+
+                    {/* Scored Evaluation */}
+                    <div>
+                        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <FileBarChart className="w-4 h-4 text-gray-400" />
+                            Qualitative Evaluation
+                        </h2>
+                        <div className="space-y-6">
+                            <EvaluationCard
+                                title="Motivation Letter"
+                                type="motivation"
+                                url={application.documents?.motivation}
+                                verified={review.verifiedDocs?.motivation}
+                                onVerify={() => toggleDocumentVerification('motivation')}
+                                score={review.motivation}
+                                onScoreChange={(val) => handleScoreChange('motivation', val)}
+                                onPreview={setPreviewDoc}
+                            />
+
+                            <EvaluationCard
+                                title="Academic Records"
+                                type="records"
+                                url={application.documents?.records}
+                                verified={review.verifiedDocs?.records}
+                                onVerify={() => toggleDocumentVerification('records')}
+                                score={review.academic}
+                                onScoreChange={(val) => handleScoreChange('academic', val)}
+                                onPreview={setPreviewDoc}
+                            />
+
+                            <EvaluationCard
+                                title="Erasmus Presentation"
+                                type="presentation"
+                                url={application.documents?.presentation}
+                                verified={review.verifiedDocs?.presentation}
+                                onVerify={() => toggleDocumentVerification('presentation')}
+                                score={review.presentation}
+                                onScoreChange={(val) => handleScoreChange('presentation', val)}
+                                onPreview={setPreviewDoc}
+                            />
+
+                            {/* Overall Fit (No doc) */}
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-[#f47b20]/10 flex items-center justify-center text-[#f47b20]">
+                                            <User className="w-5 h-5" />
+                                        </div>
+                                        <h3 className="font-bold text-lg text-gray-900">Overall Fit & Impression</h3>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-6">
+                                    <div className="flex-1 relative h-10 flex items-center">
+                                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full transition-all duration-300 rounded-full bg-[#2e3192]"
+                                                style={{ width: `${((review.fit || 0) / 25) * 100}%` }}
+                                            />
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="25"
+                                            value={review.fit || 0}
+                                            onChange={(e) => handleScoreChange('fit', parseInt(e.target.value))}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        />
+                                    </div>
+                                    <div className="text-right w-20">
+                                        <span className="text-2xl font-bold text-gray-900 tabular-nums">{review.fit || 0}</span>
+                                        <span className="text-gray-400 text-sm font-medium">/25</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                {/* Comments Section - Moved up */}
             </div>
 
 
-
-            {/* 5. Sticky Bottom Action Bar */}
+            {/* Sticky Bottom Action Bar */}
             <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-100 p-4 z-50">
                 <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
                     <div className="flex flex-col">
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Score</span>
-                        <span className="text-3xl font-bold tabular-nums tracking-tight leading-none" style={{ color: totalScore >= 75 ? '#7ac143' : totalScore >= 50 ? '#2e3192' : '#f47b20' }}>
+                        <span className="text-3xl font-bold tabular-nums tracking-tight leading-none" style={{ color: '#2e3192' }}>
                             {totalScore}<span className="text-sm text-gray-400 font-normal ml-1">/100</span>
                         </span>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={handleSave}
-                            className="px-6 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium transition-all active:scale-95 text-sm"
-                        >
-                            Save Progress
-                        </button>
-                        <button
-                            onClick={handleMarkReviewed}
-                            className="px-6 py-2.5 text-white rounded-xl font-semibold transition-all shadow-lg active:scale-95 text-sm flex items-center gap-2"
-                            style={{ backgroundColor: '#2e3192', boxShadow: '0 4px 14px rgba(46, 49, 146, 0.25)' }}
-                        >
-                            <CheckCircle2 className="w-4 h-4" />
-                            Mark as Reviewed
-                        </button>
+                    <div className="flex items-center gap-4">
+                        <span className="text-xs text-gray-400 font-medium text-right">
+                            {verifiedCount} of {totalDocs} checks completed
+                        </span>
+                        <StatusDropdown
+                            status={getReviewStatus(id)}
+                            onStatusChange={(newStatus) => updateReview(id, { status: newStatus })}
+                        />
                     </div>
                 </div>
             </div>

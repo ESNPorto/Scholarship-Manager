@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FileText, Upload, LogOut } from 'lucide-react';
 
 import logo from '../assets/favicon.png';
@@ -10,6 +10,7 @@ const Layout = ({ children }) => {
     const { loadData } = useApp();
     const { currentUser, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [scrollProgress, setScrollProgress] = useState(0);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -101,16 +102,18 @@ const Layout = ({ children }) => {
                 </div>
             </header>
 
-            {/* ESN Dark Blue Scroll Progress Strip */}
-            <div className="fixed top-16 left-0 right-0 z-40 h-2 bg-gray-100">
-                <div
-                    className="h-full transition-all duration-150"
-                    style={{
-                        width: `${scrollProgress}%`,
-                        backgroundColor: '#2e3192'
-                    }}
-                />
-            </div>
+            {/* ESN Dark Blue Scroll Progress Strip - Hidden on Review Page */}
+            {!location.pathname.includes('/review/') && (
+                <div className="fixed top-16 left-0 right-0 z-40 h-2 bg-gray-100">
+                    <div
+                        className="h-full transition-all duration-150"
+                        style={{
+                            width: `${scrollProgress}%`,
+                            backgroundColor: '#2e3192'
+                        }}
+                    />
+                </div>
+            )}
 
             {/* Main Content */}
             <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-24 animate-in fade-in duration-500">
