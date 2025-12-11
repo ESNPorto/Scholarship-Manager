@@ -1,19 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
-import { Upload, Plus, FileText, CheckCircle, AlertCircle, Database } from 'lucide-react';
-import { createEdition, batchSaveApplications } from '../services/db';
+import { Upload, Plus, FileText, CheckCircle, AlertCircle, Database, Edit, Trash2, X } from 'lucide-react';
+import { createEdition, batchSaveApplications, updateEdition, deleteEdition, getApplicationsByEdition } from '../services/db';
 import { parseCSV, mapApplicationData } from '../utils/csvParser';
 import { useApp } from '../context/AppContext';
 
 const ImportView = () => {
     const { editions, refreshEditions, isEditionsLoading, currentEditionId, loadApplications } = useApp();
 
-    // New Edition State
-    const [newEditionName, setNewEditionName] = useState('');
+    // Edition State
     const currentYear = new Date().getFullYear();
-    const [newEditionYear, setNewEditionYear] = useState(`${(currentYear - 1).toString().slice(2)}/${currentYear.toString().slice(2)}`); // e.g. 24/25 default
-    const [newEditionSemester, setNewEditionSemester] = useState('1st');
-    const [isCreating, setIsCreating] = useState(false);
+    const [name, setName] = useState('');
+    const [year, setYear] = useState(`${(currentYear - 1).toString().slice(2)}/${currentYear.toString().slice(2)}`);
+    const [semester, setSemester] = useState('1st');
+
+    // Edit Mode State
+    const [editingId, setEditingId] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Import State
     const [selectedEditionId, setSelectedEditionId] = useState('');
@@ -21,33 +24,92 @@ const ImportView = () => {
     const [isImporting, setIsImporting] = useState(false);
     const [importStatus, setImportStatus] = useState(null); // { type: 'success' | 'error', message: '' }
 
+    // Preview Data State
+    const [previewApps, setPreviewApps] = useState([]);
+    const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
     useEffect(() => {
         if (editions.length > 0 && !selectedEditionId) {
             setSelectedEditionId(editions[0].id);
         }
     }, [editions, selectedEditionId]);
 
-    const handleCreateEdition = async (e) => {
+    // Load preview data when edition changes
+    useEffect(() => {
+        const loadPreview = async () => {
+            if (!selectedEditionId) {
+                setPreviewApps([]);
+                return;
+            }
+            setIsPreviewLoading(true);
+            try {
+                const apps = await getApplicationsByEdition(selectedEditionId);
+                setPreviewApps(apps);
+            } catch (err) {
+                console.error("Failed to load preview data:", err);
+            } finally {
+                setIsPreviewLoading(false);
+            }
+        };
+        loadPreview();
+    }, [selectedEditionId, importStatus]); // Reload on import success too
+
+    const handleCreateOrUpdateEdition = async (e) => {
         e.preventDefault();
-        setIsCreating(true);
+        setIsSubmitting(true);
         try {
             const editionData = {
-                name: newEditionName,
-                year: newEditionYear,
-                semester: newEditionSemester,
-                isActive: true // Default to active?
+                name: name,
+                year: year,
+                semester: semester,
+                isActive: true
             };
-            const newEdition = await createEdition(editionData);
+
+            if (editingId) {
+                await updateEdition(editingId, editionData);
+                setImportStatus({ type: 'success', message: 'Edition updated successfully!' });
+            } else {
+                const newEdition = await createEdition(editionData);
+                setSelectedEditionId(newEdition.id);
+                setImportStatus({ type: 'success', message: 'Edition created successfully!' });
+            }
 
             await refreshEditions();
-            setSelectedEditionId(newEdition.id);
-            setNewEditionName('');
-            setImportStatus({ type: 'success', message: 'Edition created successfully!' });
+            resetForm();
         } catch (error) {
-            setImportStatus({ type: 'error', message: 'Failed to create edition.' });
+            setImportStatus({ type: 'error', message: `Failed to ${editingId ? 'update' : 'create'} edition.` });
         } finally {
-            setIsCreating(false);
+            setIsSubmitting(false);
         }
+    };
+
+    const handleDelete = async (id, e) => {
+        e.stopPropagation();
+        if (window.confirm('Are you sure you want to delete this edition? This cannot be undone.')) {
+            try {
+                await deleteEdition(id);
+                await refreshEditions();
+                if (selectedEditionId === id) setSelectedEditionId('');
+                setImportStatus({ type: 'success', message: 'Edition deleted successfully.' });
+            } catch (error) {
+                setImportStatus({ type: 'error', message: 'Failed to delete edition.' });
+            }
+        }
+    };
+
+    const handleEdit = (edition, e) => {
+        e.stopPropagation();
+        setEditingId(edition.id);
+        setName(edition.name);
+        setYear(edition.year);
+        setSemester(edition.semester);
+    };
+
+    const resetForm = () => {
+        setEditingId(null);
+        setName('');
+        setYear(`${(currentYear - 1).toString().slice(2)}/${currentYear.toString().slice(2)}`);
+        setSemester('1st');
     };
 
     const handleFileDrop = (e) => {
@@ -106,18 +168,18 @@ const ImportView = () => {
                 <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                            <Plus className="w-5 h-5 text-esn-pink" />
-                            New Edition
+                            {editingId ? <Edit className="w-5 h-5 text-esn-dark-blue" /> : <Plus className="w-5 h-5 text-esn-pink" />}
+                            {editingId ? 'Edit Edition' : 'New Edition'}
                         </h3>
-                        <form onSubmit={handleCreateEdition} className="space-y-4">
+                        <form onSubmit={handleCreateOrUpdateEdition} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Edition Name</label>
                                 <input
                                     type="text"
                                     required
                                     placeholder="e.g. Spring 2025"
-                                    value={newEditionName}
-                                    onChange={(e) => setNewEditionName(e.target.value)}
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
                                     className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-esn-cyan/20 focus:border-esn-cyan transition-all"
                                 />
                             </div>
@@ -128,16 +190,16 @@ const ImportView = () => {
                                         type="text"
                                         required
                                         placeholder="e.g. 24/25"
-                                        value={newEditionYear}
-                                        onChange={(e) => setNewEditionYear(e.target.value)}
+                                        value={year}
+                                        onChange={(e) => setYear(e.target.value)}
                                         className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-esn-cyan/20 focus:border-esn-cyan transition-all"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
                                     <select
-                                        value={newEditionSemester}
-                                        onChange={(e) => setNewEditionSemester(e.target.value)}
+                                        value={semester}
+                                        onChange={(e) => setSemester(e.target.value)}
                                         className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-esn-cyan/20 focus:border-esn-cyan transition-all"
                                     >
                                         <option value="1st">1st</option>
@@ -145,13 +207,28 @@ const ImportView = () => {
                                     </select>
                                 </div>
                             </div>
-                            <button
-                                type="submit"
-                                disabled={isCreating || !newEditionName}
-                                className="w-full btn-primary justify-center bg-esn-green hover:bg-esn-green/90 text-white py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-                            >
-                                {isCreating ? 'Creating...' : 'Create Edition'}
-                            </button>
+
+                            <div className="flex gap-2">
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting || !name}
+                                    className={`flex-1 justify-center py-2 rounded-lg font-medium transition-colors disabled:opacity-50 ${editingId
+                                        ? 'bg-esn-dark-blue hover:bg-esn-dark-blue/90 text-white'
+                                        : 'bg-esn-green hover:bg-esn-green/90 text-white'
+                                        }`}
+                                >
+                                    {isSubmitting ? 'Saving...' : (editingId ? 'Update Edition' : 'Create Edition')}
+                                </button>
+                                {editingId && (
+                                    <button
+                                        type="button"
+                                        onClick={resetForm}
+                                        className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
                         </form>
                     </div>
 
@@ -160,32 +237,67 @@ const ImportView = () => {
                             <Database className="w-5 h-5 text-gray-400" />
                             Existing Editions
                         </h3>
-                        <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                             {isEditionsLoading ? (
                                 <p className="text-sm text-gray-400 text-center py-4">Loading...</p>
                             ) : editions.length === 0 ? (
                                 <p className="text-sm text-gray-400 text-center py-4">No editions found.</p>
                             ) : (
-                                editions.map((edition) => (
-                                    <div
-                                        key={edition.id}
-                                        onClick={() => setSelectedEditionId(edition.id)}
-                                        className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedEditionId === edition.id
-                                            ? 'border-esn-cyan bg-esn-cyan/5 ring-1 ring-esn-cyan'
-                                            : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="font-medium text-gray-900">{edition.name}</p>
-                                                <p className="text-xs text-gray-500">{edition.semester} Semester {edition.year}</p>
-                                            </div>
-                                            {selectedEditionId === edition.id && (
-                                                <CheckCircle className="w-4 h-4 text-esn-cyan" />
-                                            )}
-                                        </div>
-                                    </div>
-                                ))
+                                <div className="border rounded-xl separate-borders border-spacing-0 overflow-hidden">
+                                    <table className="w-full text-left text-sm">
+                                        <thead className="bg-gray-50 text-gray-500 font-medium">
+                                            <tr>
+                                                <th className="px-4 py-2">Name</th>
+                                                <th className="px-4 py-2">Year</th>
+                                                <th className="px-4 py-2 w-20 text-center">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {editions.map((edition) => (
+                                                <tr
+                                                    key={edition.id}
+                                                    onClick={() => setSelectedEditionId(edition.id)}
+                                                    className={`group cursor-pointer transition-colors ${selectedEditionId === edition.id
+                                                        ? 'bg-esn-cyan/5'
+                                                        : 'hover:bg-gray-50'
+                                                        }`}
+                                                >
+                                                    <td className="px-4 py-3">
+                                                        <div className="flex items-center gap-2">
+                                                            {selectedEditionId === edition.id && (
+                                                                <CheckCircle className="w-3.5 h-3.5 text-esn-cyan" />
+                                                            )}
+                                                            <span className={`font-medium ${selectedEditionId === edition.id ? 'text-esn-cyan' : 'text-gray-900'}`}>
+                                                                {edition.name}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-600">
+                                                        {edition.semester} Sem {edition.year}
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={(e) => handleEdit(edition, e)}
+                                                                className="p-1.5 text-gray-400 hover:text-esn-dark-blue hover:bg-gray-100 rounded-md transition-colors"
+                                                                title="Edit"
+                                                            >
+                                                                <Edit className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => handleDelete(edition.id, e)}
+                                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -286,6 +398,167 @@ const ImportView = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Data Preview Section */}
+            {selectedEditionId && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <FileText className="w-5 h-5 text-gray-400" />
+                                Data Preview
+                            </h3>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Showing {previewApps.length} applications for <span className="font-medium text-gray-900">{editions.find(e => e.id === selectedEditionId)?.name}</span>
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => loadApplications(selectedEditionId)}
+                            className="text-sm text-esn-dark-blue hover:text-esn-dark-blue/80 font-medium"
+                        >
+                            Refresh Data
+                        </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        {isPreviewLoading ? (
+                            <div className="p-8 text-center text-gray-500">Loading data...</div>
+                        ) : previewApps.length === 0 ? (
+                            <div className="p-8 text-center text-gray-500 bg-gray-50">
+                                No applications found for this edition. Import some data to get started.
+                            </div>
+                        ) : (
+                            <table className="w-full text-left text-xs whitespace-nowrap">
+                                <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
+                                    <tr>
+                                        {/* Personal Info */}
+                                        <th className="px-4 py-3 bg-gray-50 sticky left-0 z-10 shadow-sm">Name</th>
+                                        <th className="px-4 py-3">Email</th>
+                                        <th className="px-4 py-3">Phone</th>
+                                        <th className="px-4 py-3">Student No.</th>
+
+                                        {/* Academic Info */}
+                                        <th className="px-4 py-3 bg-blue-50/10">University</th>
+                                        <th className="px-4 py-3 bg-blue-50/10">Course</th>
+
+                                        {/* Mobility Info */}
+                                        <th className="px-4 py-3 bg-green-50/10 text-center">Country</th>
+                                        <th className="px-4 py-3 bg-green-50/10">City</th>
+                                        <th className="px-4 py-3 bg-green-50/10">Sem</th>
+                                        <th className="px-4 py-3 bg-green-50/10">Year</th>
+
+                                        {/* Financial Info */}
+                                        <th className="px-4 py-3 bg-yellow-50/10">IBAN</th>
+                                        <th className="px-4 py-3 bg-yellow-50/10">Bank Owner</th>
+
+                                        {/* Documents */}
+                                        <th className="px-4 py-3 bg-purple-50/10">Motivation</th>
+                                        <th className="px-4 py-3 bg-purple-50/10">CV</th>
+                                        <th className="px-4 py-3 bg-purple-50/10">Learning Agr.</th>
+                                        <th className="px-4 py-3 bg-purple-50/10">Transcript</th>
+                                        <th className="px-4 py-3 bg-purple-50/10">Proof Enrol.</th>
+                                        <th className="px-4 py-3 bg-purple-50/10">ID/Passport</th>
+                                        <th className="px-4 py-3 bg-purple-50/10">Social/Disad.</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {previewApps.slice(0, 50).map((app) => (
+                                        <tr key={app.id} className="hover:bg-gray-50 transition-colors">
+                                            {/* Personal */}
+                                            <td className="px-4 py-3 font-medium text-gray-900 sticky left-0 bg-white group-hover:bg-gray-50 z-10 shadow-sm border-r border-gray-100">
+                                                {app.personalInfo?.name || app.name || 'Unknown'}
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-600 max-w-[150px] truncate" title={app.personalInfo?.email || app.email}>
+                                                {app.personalInfo?.email || app.email || '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-600">
+                                                {app.personalInfo?.phoneNumber || app.phoneNumber || '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-600">
+                                                {app.personalInfo?.studentNumber || app.studentNumber || '-'}
+                                            </td>
+
+                                            {/* Academic */}
+                                            <td className="px-4 py-3 text-gray-600 max-w-[150px] truncate bg-blue-50/5" title={app.academicInfo?.university || app.university}>
+                                                {app.academicInfo?.university || app.university || '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-600 max-w-[150px] truncate bg-blue-50/5">
+                                                {app.academicInfo?.course || app.course || '-'}
+                                            </td>
+
+                                            {/* Mobility */}
+                                            <td className="px-4 py-3 text-center bg-green-50/5">
+                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                                    {app.mobilityInfo?.destinationCountry || app.destinationCountry || '-'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-600 max-w-[100px] truncate bg-green-50/5">
+                                                {app.mobilityInfo?.destinationCity || app.destinationCity || '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-600 bg-green-50/5">
+                                                {app.mobilityInfo?.semester || app.semester || '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-600 bg-green-50/5">
+                                                {app.mobilityInfo?.academicYear || app.academicYear || '-'}
+                                            </td>
+
+                                            {/* Financial */}
+                                            <td className="px-4 py-3 text-gray-600 max-w-[150px] truncate font-mono text-[10px] bg-yellow-50/5">
+                                                {app.financialInfo?.iban || '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-600 max-w-[120px] truncate bg-yellow-50/5">
+                                                {app.financialInfo?.bankAccountOwner || '-'}
+                                            </td>
+
+                                            {/* Documents - Links with truncation */}
+                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
+                                                <a href={app.documents?.motivationLetter} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                    {app.documents?.motivationLetter || '-'}
+                                                </a>
+                                            </td>
+                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
+                                                <a href={app.documents?.cv} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                    {app.documents?.cv || '-'}
+                                                </a>
+                                            </td>
+                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
+                                                <a href={app.documents?.learningAgreement} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                    {app.documents?.learningAgreement || '-'}
+                                                </a>
+                                            </td>
+                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
+                                                <a href={app.documents?.transcriptOfRecords} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                    {app.documents?.transcriptOfRecords || '-'}
+                                                </a>
+                                            </td>
+                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
+                                                <a href={app.documents?.proofOfEnrolment} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                    {app.documents?.proofOfEnrolment || '-'}
+                                                </a>
+                                            </td>
+                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
+                                                <a href={app.documents?.idPassportItem} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                    {app.documents?.idPassportItem || '-'}
+                                                </a>
+                                            </td>
+                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
+                                                <a href={app.documents?.socialDisadvantageItem} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                    {app.documents?.socialDisadvantageItem || '-'}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                        {previewApps.length > 50 && (
+                            <div className="p-3 text-center text-xs text-gray-400 border-t border-gray-100 bg-gray-50">
+                                Showing first 50 of {previewApps.length} records
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

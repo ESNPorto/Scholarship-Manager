@@ -1,5 +1,5 @@
 import { db } from '../firebase';
-import { doc, setDoc, onSnapshot, collection, updateDoc, arrayUnion, writeBatch, getDocs, where, query } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, collection, updateDoc, deleteDoc, arrayUnion, writeBatch, getDocs, where, query } from 'firebase/firestore';
 
 export const subscribeToReviews = (callback) => {
     const unsubscribe = onSnapshot(collection(db, 'reviews'), (snapshot) => {
@@ -53,6 +53,29 @@ export const createEdition = async (editionData) => {
         return newEdition;
     } catch (error) {
         console.error("Error creating edition:", error);
+        throw error;
+    }
+};
+
+export const updateEdition = async (editionId, editionData) => {
+    try {
+        const editionRef = doc(db, 'editions', editionId);
+        await updateDoc(editionRef, {
+            ...editionData,
+            lastUpdated: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error("Error updating edition:", error);
+        throw error;
+    }
+};
+
+export const deleteEdition = async (editionId) => {
+    try {
+        const editionRef = doc(db, 'editions', editionId);
+        await deleteDoc(editionRef);
+    } catch (error) {
+        console.error("Error deleting edition:", error);
         throw error;
     }
 };
