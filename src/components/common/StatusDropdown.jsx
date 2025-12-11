@@ -19,7 +19,7 @@ const StatusDropdown = ({ status, onStatusChange }) => {
         { value: 'not_started', label: 'Not Started', className: 'bg-gray-100 text-gray-500 border-gray-200', indicatorColor: '#9ca3af' },
         { value: 'in_progress', label: 'In Progress', className: 'bg-esn-orange text-white border-esn-orange', indicatorColor: 'bg-esn-orange' },
         { value: 'reviewed', label: 'Reviewed', className: 'bg-esn-green text-white border-esn-green', indicatorColor: 'bg-esn-green' },
-        { value: 'discarded', label: 'Discarded', className: 'bg-esn-magenta text-white border-esn-magenta', indicatorColor: 'bg-esn-magenta' }
+        { value: 'discarded', label: 'Discarded', className: 'bg-red-500 text-white border-red-500', indicatorColor: 'bg-red-500' }
     ];
 
     const currentOption = options.find(o => o.value === status) || options[0];

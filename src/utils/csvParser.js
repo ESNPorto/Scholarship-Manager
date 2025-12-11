@@ -90,8 +90,7 @@ export const mapApplicationData = async (rawData, editionId, columnMapping) => {
             'transcriptOfRecords',
             'socialDisadvantageItem',
             'presentation',
-            'proofOfIban',
-            'citizenCard'
+            'proofOfIban'
         ];
 
         // Check for missing documents

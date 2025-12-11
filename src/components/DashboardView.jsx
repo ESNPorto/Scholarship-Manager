@@ -62,7 +62,17 @@ const DashboardView = () => {
         }
 
         // Sort
+        // Sort
         filtered.sort((a, b) => {
+            if (sortConfig.key === 'status') {
+                const statusPriority = { reviewed: 3, in_progress: 2, not_started: 1, discarded: 0 };
+                const valA = statusPriority[a.status] || 0;
+                const valB = statusPriority[b.status] || 0;
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            }
+
             if (a[sortConfig.key] < b[sortConfig.key]) {
                 return sortConfig.direction === 'asc' ? -1 : 1;
             }
@@ -146,7 +156,7 @@ const DashboardView = () => {
                 );
             case 'discarded':
                 return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-esn-magenta/10 text-esn-magenta border-esn-magenta/30">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-red-500/10 text-red-500 border-red-500/30">
                         <Circle className="w-3.5 h-3.5 fill-current" /> Discarded
                     </span>
                 );
@@ -237,7 +247,9 @@ const DashboardView = () => {
                                 <th className="px-6 py-5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('score')}>
                                     <div className="flex items-center justify-center gap-2">Score <ArrowUpDown className="w-3 h-3" /></div>
                                 </th>
-                                <th className="px-6 py-5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('status')}>
+                                    <div className="flex items-center justify-center gap-2">Status <ArrowUpDown className="w-3 h-3" /></div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
