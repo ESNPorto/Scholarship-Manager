@@ -83,21 +83,40 @@ const DashboardView = () => {
     };
 
     const handleExportCSV = () => {
-        const exportData = processedApplications.map((app) => ({
-            Rank: app.rank,
-            Name: app.name,
-            Email: app.email,
-            University: app.university,
-            Destination: `${app.destinationCity}, ${app.destinationCountry}`,
-            Score: app.score,
-            Status: app.status,
-            'Motivation Score': reviews[app.id]?.motivation || 0,
-            'Academic Score': reviews[app.id]?.academic || 0,
-            'Presentation Score': reviews[app.id]?.presentation || 0,
-            'Fit Score': reviews[app.id]?.fit || 0,
-            'Documents Complete': reviews[app.id]?.documentsComplete ? 'Yes' : 'No',
-            Notes: (reviews[app.id]?.comments || []).map(c => c.text).join('; ')
-        }));
+        const exportData = processedApplications.map((app) => {
+            const review = reviews[app.id] || {};
+            const motivation = review.motivation || {};
+            const presentation = review.presentation || {};
+
+            const getAvg = (obj) => {
+                if (typeof obj === 'number') return obj;
+                if (!obj) return 0;
+                return ((obj.president || 0) + (obj.eo || 0) + (obj.cf || 0)) / 3;
+            };
+
+            return {
+                Rank: app.rank,
+                Name: app.name,
+                Email: app.email,
+                University: app.university,
+                Destination: `${app.destinationCity}, ${app.destinationCountry}`,
+                Score: app.score,
+                Status: app.status,
+                Valid: review.valid !== false ? 'Yes' : 'No',
+                'Mot Avg': getAvg(motivation).toFixed(2),
+                'Mot President': motivation.president || 0,
+                'Mot EO': motivation.eo || 0,
+                'Mot CF': motivation.cf || 0,
+                'Pres Avg': getAvg(presentation).toFixed(2),
+                'Pres President': presentation.president || 0,
+                'Pres EO': presentation.eo || 0,
+                'Pres CF': presentation.cf || 0,
+                'Academic Score': review.academic || 0,
+                'IRS Score': review.irs || 0,
+                'Documents Complete': review.verifiedDocs && Object.values(review.verifiedDocs).filter(Boolean).length === 6 ? 'Yes' : 'No',
+                Notes: (review.comments || []).map(c => c.text).join('; ')
+            };
+        });
 
         const csv = Papa.unparse(exportData);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -239,7 +258,7 @@ const DashboardView = () => {
                                         {app.destinationCity}, <span className="text-gray-400">{app.destinationCountry}</span>
                                     </td>
                                     <td className="px-6 py-4 text-center">
-                                        <span className={`text-lg font-bold tabular-nums tracking-tight ${app.score >= 75 ? 'text-esn-green' : app.score >= 50 ? 'text-esn-dark-blue' : 'text-esn-orange'}`}>{app.score}</span>
+                                        <span className={`text-lg font-bold tabular-nums tracking-tight ${app.score >= 15 ? 'text-esn-green' : app.score >= 10 ? 'text-esn-dark-blue' : 'text-esn-orange'}`}>{app.score}</span>
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <StatusBadge status={app.status} />

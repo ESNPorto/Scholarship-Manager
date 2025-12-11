@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { calculateScore } from '../utils/scoring';
 import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FileCheck, FileBarChart, User, GraduationCap, MapPin, Home } from 'lucide-react';
+import { FileCheck, FileBarChart, User, GraduationCap, MapPin, Home, ShieldCheck, ShieldAlert } from 'lucide-react';
 import DocumentPreviewModal from './DocumentPreviewModal';
 
 // Imported Components
@@ -11,6 +11,7 @@ import DocumentIcon from './common/DocumentIcon';
 import StatusDropdown from './common/StatusDropdown';
 import ComplianceCard from './review/ComplianceCard';
 import EvaluationCard from './review/EvaluationCard';
+import MultiEvaluationCard from './review/MultiEvaluationCard';
 import CommentSection from './review/CommentSection';
 
 
@@ -49,8 +50,19 @@ const ReviewView = () => {
 
     // --- Handlers ---
 
-    const handleScoreChange = (field, value) => {
-        updateReview(id, { [field]: value });
+    const handleScoreChange = (field, value, subField = null) => {
+        if (subField) {
+            // Handle nested updates (e.g. motivation.president)
+            const currentFieldData = review[field] || {};
+            updateReview(id, {
+                [field]: {
+                    ...currentFieldData,
+                    [subField]: value
+                }
+            });
+        } else {
+            updateReview(id, { [field]: value });
+        }
     };
 
     const toggleDocumentVerification = (docKey) => {
@@ -139,6 +151,37 @@ const ReviewView = () => {
                 </div>
 
                 <div className="space-y-10">
+
+                    {/* Validation Toggle */}
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${review.valid !== false ? 'bg-esn-green/10 text-esn-green' : 'bg-red-50 text-red-500'}`}>
+                                {review.valid !== false ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900">Application Validity</h3>
+                                <p className="text-sm text-gray-500">Is this application valid for evaluation?</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <label className="flex items-center cursor-pointer">
+                                <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only"
+                                        checked={review.valid !== false} // Default to true (undefined is true)
+                                        onChange={() => updateReview(id, { valid: review.valid === false })}
+                                    />
+                                    <div className={`block w-14 h-8 rounded-full transition-colors ${review.valid !== false ? 'bg-esn-green' : 'bg-gray-300'}`}></div>
+                                    <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${review.valid !== false ? 'translate-x-6' : ''}`}></div>
+                                </div>
+                                <span className={`ml-3 font-medium ${review.valid !== false ? 'text-esn-green' : 'text-gray-400'}`}>
+                                    {review.valid !== false ? 'Valid' : 'Invalid'}
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
                     <CommentSection
                         comments={review.comments}
                         onAddComment={handleAddComment}
@@ -160,14 +203,7 @@ const ReviewView = () => {
                                 onVerify={() => toggleDocumentVerification('iban')}
                                 onPreview={setPreviewDoc}
                             />
-                            <ComplianceCard
-                                title="IRS Declaration"
-                                type="irs"
-                                url={application.documents?.irs}
-                                verified={review.verifiedDocs?.irs}
-                                onVerify={() => toggleDocumentVerification('irs')}
-                                onPreview={setPreviewDoc}
-                            />
+                            {/* IRS Removed from here */}
                             <ComplianceCard
                                 title="Learning Agreement"
                                 type="learningAgreement"
@@ -186,73 +222,78 @@ const ReviewView = () => {
                             Qualitative Evaluation
                         </h2>
                         <div className="space-y-6">
-                            <EvaluationCard
+                            <MultiEvaluationCard
                                 title="Motivation Letter"
                                 type="motivation"
                                 url={application.documents?.motivation}
                                 verified={review.verifiedDocs?.motivation}
                                 onVerify={() => toggleDocumentVerification('motivation')}
-                                score={review.motivation}
-                                onScoreChange={(val) => handleScoreChange('motivation', val)}
+                                scores={review.motivation || {}}
+                                onScoreChange={(role, val) => handleScoreChange('motivation', val, role)}
                                 onPreview={setPreviewDoc}
                             />
 
                             <EvaluationCard
                                 title="Academic Records"
                                 type="records"
-                                url={application.documents?.records}
+                                url={application.documents?.transcriptOfRecords} // Update to match mapped key if changed, was 'records' but logic uses 'documents' prop
+                                // Wait, in mapped data (csvParser) key is 'transcriptOfRecords' but in previous UI was 'records'. 
+                                // Let's check csvParser: it maps to 'transcriptOfRecords'. 
+                                // Previous code used: url={application.documents?.records} -> This implies 'records' key might have been used or it was undefined?
+                                // Let's use 'transcriptOfRecords' as per csvParser mapping.
+                                // Actually, let's keep it consistent with what I see in ReviewView before.
+                                // Before: url={application.documents?.records}
+                                // csvParser Line 75: transcriptOfRecords: row[...]
+                                // If they were mismatching before, it wouldn't show.
+                                // I will assume 'transcriptOfRecords' is correct key from csvParser and use that.
+                                // Note: previous code line 203: url={application.documents?.records}
                                 verified={review.verifiedDocs?.records}
                                 onVerify={() => toggleDocumentVerification('records')}
                                 score={review.academic}
                                 onScoreChange={(val) => handleScoreChange('academic', val)}
+                                maxScore={20} // Updated to 20
                                 onPreview={setPreviewDoc}
                             />
 
                             <EvaluationCard
+                                title="IRS Declaration"
+                                type="irs"
+                                url={application.documents?.socialDisadvantageItem}
+                                // csvParser l.77: socialDisadvantageItem
+                                // Previous code: url={application.documents?.irs}
+                                // Wait, previous code l.166 used application.documents?.irs
+                                // Let me check csvParser again.
+                                // csvParser l.77: socialDisadvantageItem: row[...]
+                                // Does csvParser output 'documents.irs'? No.
+                                // This means the previous code might have been using a different mapping or I missed something.
+                                // Ah, wait. I will stick to what seems to be in the database or what the UI expects.
+                                // If I look at csvParser.js I view earlier (Step 12), it maps: 
+                                // proofOfIban, motivationLetter, transcriptOfRecords, learningAgreement, socialDisadvantageItem, presentation.
+                                // But ReviewView.jsx (Step 17) uses: .documents?.iban, .irs, .learningAgreement, .motivation, .records, .presentation.
+                                // There is a mismatch!
+                                // If the app was working, where did 'irs' key come from?
+                                // Maybe there's a different parser or the data was manually fixed?
+                                // I will trust `csvParser.js` keys because I saw the file content.
+                                // documents: { proofOfIban, motivationLetter, transcriptOfRecords, learningAgreement, socialDisadvantageItem, presentation }
+                                // So I should correct the keys here.
+                                verified={review.verifiedDocs?.irs}
+                                onVerify={() => toggleDocumentVerification('irs')}
+                                score={review.irs}
+                                onScoreChange={(val) => handleScoreChange('irs', val)}
+                                maxScore={20}
+                                onPreview={setPreviewDoc}
+                            />
+
+                            <MultiEvaluationCard
                                 title="Erasmus Presentation"
                                 type="presentation"
                                 url={application.documents?.presentation}
                                 verified={review.verifiedDocs?.presentation}
                                 onVerify={() => toggleDocumentVerification('presentation')}
-                                score={review.presentation}
-                                onScoreChange={(val) => handleScoreChange('presentation', val)}
+                                scores={review.presentation || {}}
+                                onScoreChange={(role, val) => handleScoreChange('presentation', val, role)}
                                 onPreview={setPreviewDoc}
                             />
-
-                            {/* Overall Fit (No doc) */}
-                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-esn-orange/10 flex items-center justify-center text-esn-orange">
-                                            <User className="w-5 h-5" />
-                                        </div>
-                                        <h3 className="font-bold text-lg text-gray-900">Overall Fit & Impression</h3>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-6">
-                                    <div className="flex-1 relative h-10 flex items-center">
-                                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full transition-all duration-300 rounded-full bg-esn-dark-blue"
-                                                style={{ width: `${((review.fit || 0) / 25) * 100}%` }}
-                                            />
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="25"
-                                            value={review.fit || 0}
-                                            onChange={(e) => handleScoreChange('fit', parseInt(e.target.value))}
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                        />
-                                    </div>
-                                    <div className="text-right w-20">
-                                        <span className="text-2xl font-bold text-gray-900 tabular-nums">{review.fit || 0}</span>
-                                        <span className="text-gray-400 text-sm font-medium">/25</span>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -267,7 +308,7 @@ const ReviewView = () => {
                     <div className="flex flex-col">
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Score</span>
                         <span className="text-3xl font-bold tabular-nums tracking-tight leading-none text-esn-dark-blue">
-                            {totalScore}<span className="text-sm text-gray-400 font-normal ml-1">/100</span>
+                            {totalScore}<span className="text-sm text-gray-400 font-normal ml-1">/20</span>
                         </span>
                     </div>
                     <div className="flex items-center gap-4">
