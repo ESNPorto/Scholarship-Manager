@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Users, FileCheck, Hourglass, Trophy, Medal, Award, FileDown, Download } from 'lucide-react';
 import Papa from 'papaparse';
+import DashboardCharts from './DashboardCharts';
 
 const DashboardView = () => {
     const { applications, reviews, navigateToReview, getReviewStatus } = useApp();
@@ -201,6 +202,9 @@ const DashboardView = () => {
                     <div className="text-sm text-gray-500 mt-1 font-medium">Applications remaining</div>
                 </div>
             </div>
+
+            {/* Charts Section */}
+            <DashboardCharts applications={applications} />
 
             {/* Filters and Search */}
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
