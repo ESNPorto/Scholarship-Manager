@@ -230,7 +230,7 @@ const ReviewView = () => {
                             <ComplianceCard
                                 title="IBAN Proof"
                                 type="iban"
-                                url={application.documents?.proofOfIban}
+                                url={application.documents?.iban || application.documents?.proofOfIban}
                                 verified={review.verifiedDocs?.iban}
                                 onVerify={() => toggleDocumentVerification('iban')}
                                 onPreview={setPreviewDoc}
@@ -267,7 +267,7 @@ const ReviewView = () => {
                             <MultiEvaluationCard
                                 title="Motivation Letter"
                                 type="motivation"
-                                url={application.documents?.motivationLetter}
+                                url={application.documents?.motivation || application.documents?.motivationLetter}
                                 verified={review.verifiedDocs?.motivation}
                                 onVerify={() => toggleDocumentVerification('motivation')}
                                 scores={review.motivation || {}}
@@ -278,46 +278,19 @@ const ReviewView = () => {
                             <EvaluationCard
                                 title="Academic Records"
                                 type="records"
-                                url={application.documents?.transcriptOfRecords} // Update to match mapped key if changed, was 'records' but logic uses 'documents' prop
-                                // Wait, in mapped data (csvParser) key is 'transcriptOfRecords' but in previous UI was 'records'. 
-                                // Let's check csvParser: it maps to 'transcriptOfRecords'. 
-                                // Previous code used: url={application.documents?.records} -> This implies 'records' key might have been used or it was undefined?
-                                // Let's use 'transcriptOfRecords' as per csvParser mapping.
-                                // Actually, let's keep it consistent with what I see in ReviewView before.
-                                // Before: url={application.documents?.records}
-                                // csvParser Line 75: transcriptOfRecords: row[...]
-                                // If they were mismatching before, it wouldn't show.
-                                // I will assume 'transcriptOfRecords' is correct key from csvParser and use that.
-                                // Note: previous code line 203: url={application.documents?.records}
+                                url={application.documents?.records || application.documents?.transcriptOfRecords}
                                 verified={review.verifiedDocs?.records}
                                 onVerify={() => toggleDocumentVerification('records')}
                                 score={review.academic}
                                 onScoreChange={(val) => handleScoreChange('academic', val)}
-                                maxScore={20} // Updated to 20
+                                maxScore={20}
                                 onPreview={setPreviewDoc}
                             />
 
                             <EvaluationCard
                                 title="IRS Declaration"
                                 type="irs"
-                                url={application.documents?.socialDisadvantageItem}
-                                // csvParser l.77: socialDisadvantageItem
-                                // Previous code: url={application.documents?.irs}
-                                // Wait, previous code l.166 used application.documents?.irs
-                                // Let me check csvParser again.
-                                // csvParser l.77: socialDisadvantageItem: row[...]
-                                // Does csvParser output 'documents.irs'? No.
-                                // This means the previous code might have been using a different mapping or I missed something.
-                                // Ah, wait. I will stick to what seems to be in the database or what the UI expects.
-                                // If I look at csvParser.js I view earlier (Step 12), it maps: 
-                                // proofOfIban, motivationLetter, transcriptOfRecords, learningAgreement, socialDisadvantageItem, presentation.
-                                // But ReviewView.jsx (Step 17) uses: .documents?.iban, .irs, .learningAgreement, .motivation, .records, .presentation.
-                                // There is a mismatch!
-                                // If the app was working, where did 'irs' key come from?
-                                // Maybe there's a different parser or the data was manually fixed?
-                                // I will trust `csvParser.js` keys because I saw the file content.
-                                // documents: { proofOfIban, motivationLetter, transcriptOfRecords, learningAgreement, socialDisadvantageItem, presentation }
-                                // So I should correct the keys here.
+                                url={application.documents?.irs || application.documents?.socialDisadvantageItem}
                                 verified={review.verifiedDocs?.irs}
                                 onVerify={() => toggleDocumentVerification('irs')}
                                 score={review.irs}

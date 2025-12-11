@@ -16,11 +16,11 @@ export const CSV_FIELD_CONFIG = [
     { key: 'destinationUniversity', label: 'Destination University', defaultHeader: 'Universidade de Destino', path: 'mobilityInfo.destinationUniversity', type: 'text' },
     // Documents
     { key: 'citizenCard', label: 'Citizen Card / Passport', defaultHeader: 'Fotocópia do Cartão de Cidadão/ Bilhete de Identidade ou Passaporte (ficheiro .pdf)', path: 'documents.citizenCard', type: 'link' },
-    { key: 'proofOfIban', label: 'Proof of IBAN', defaultHeader: 'Identificação do IBAN e do titular da conta para o qual pretende a transferência do valor da bolsa, caso lhe seja atribuída (ficheiro .pdf)', path: 'documents.proofOfIban', type: 'link' },
-    { key: 'motivationLetter', label: 'Motivation Letter', defaultHeader: 'Carta de Motivação ( ficheiro .pdf)', path: 'documents.motivationLetter', type: 'link' },
-    { key: 'transcriptOfRecords', label: 'Transcript of Records', defaultHeader: 'Comprovativo de aproveitamento académico (ficheiro .pdf)', path: 'documents.transcriptOfRecords', type: 'link' },
+    { key: 'iban', label: 'Proof of IBAN', defaultHeader: 'Identificação do IBAN e do titular da conta para o qual pretende a transferência do valor da bolsa, caso lhe seja atribuída (ficheiro .pdf)', path: 'documents.iban', type: 'link' },
+    { key: 'motivation', label: 'Motivation Letter', defaultHeader: 'Carta de Motivação ( ficheiro .pdf)', path: 'documents.motivation', type: 'link' },
+    { key: 'records', label: 'Transcript of Records', defaultHeader: 'Comprovativo de aproveitamento académico (ficheiro .pdf)', path: 'documents.records', type: 'link' },
     { key: 'learningAgreement', label: 'Learning Agreement', defaultHeader: 'Fotocópia do Learning Agreement assinado ou Carta de Aceitação assinada da instituição de destino (ficheiro .pdf)', path: 'documents.learningAgreement', type: 'link' },
-    { key: 'socialDisadvantageItem', label: 'IRS Declaration', defaultHeader: 'Fotocópia da declaração do IRS correspondente ao ano civil anterior ao início do ano letivo anterior a que se refere a candidatura à bolsa (ficheiro .pdf)', path: 'documents.socialDisadvantageItem', type: 'link' },
+    { key: 'irs', label: 'IRS Declaration', defaultHeader: 'Fotocópia da declaração do IRS correspondente ao ano civil anterior ao início do ano letivo anterior a que se refere a candidatura à bolsa (ficheiro .pdf)', path: 'documents.irs', type: 'link' },
     { key: 'presentation', label: 'Presentation', defaultHeader: 'Apresentação Powerpoint/Canva a explicares o porquê de teres escolhido o Programa Erasmus+ e sobre como achas que a mobilidade internacional impacta a vida pessoal, académica e profissional dos jovens (ficheiro .pdf)', path: 'documents.presentation', type: 'link' }
 ];
 
@@ -86,21 +86,21 @@ export const mapApplicationData = async (rawData, editionId, columnMapping) => {
         // Define required document keys
         const requiredDocs = [
             'learningAgreement',
-            'motivationLetter',
-            'transcriptOfRecords',
-            'socialDisadvantageItem',
+            'motivation',
+            'records',
+            'irs',
             'presentation',
-            'proofOfIban'
+            'iban'
         ];
 
         // Check for missing documents
         const missingDocs = [];
         const documents = {
-            proofOfIban: getValue('proofOfIban'),
-            motivationLetter: getValue('motivationLetter'),
-            transcriptOfRecords: getValue('transcriptOfRecords'),
+            iban: getValue('iban'),
+            motivation: getValue('motivation'),
+            records: getValue('records'),
             learningAgreement: getValue('learningAgreement'),
-            socialDisadvantageItem: getValue('socialDisadvantageItem'),
+            irs: getValue('irs'),
             presentation: getValue('presentation'),
             citizenCard: getValue('citizenCard')
         };
