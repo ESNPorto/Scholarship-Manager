@@ -56,7 +56,7 @@ const hashString = async (message) => {
  * @param {string} editionId - The ID of the edition
  * @param {Object} columnMapping - Object where keys are config keys (e.g. 'name') and values are CSV headers
  */
-export const mapApplicationData = async (rawData, editionId, columnMapping) => {
+export const mapApplicationData = async (rawData, editionId, columnMapping, importBatchId = null) => {
     // Validate editionId
     if (!editionId) {
         throw new Error("Edition ID is required for mapping application data");
@@ -80,8 +80,13 @@ export const mapApplicationData = async (rawData, editionId, columnMapping) => {
         if (!name && !emailRaw) return null;
 
         const email = emailRaw ? emailRaw.trim().toLowerCase() : '';
-        // Create a unique ID based on email AND edition
-        const id = await hashString(`${email}-${editionId}`);
+        // Create a unique ID based on email AND edition AND import batch (if provided)
+        // This prevents overwrites on subsequent imports
+        const idBase = importBatchId
+            ? `${email}-${editionId}-${importBatchId}`
+            : `${email}-${editionId}`;
+
+        const id = await hashString(idBase);
 
         // Define required document keys
         const requiredDocs = [

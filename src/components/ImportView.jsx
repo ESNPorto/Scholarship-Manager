@@ -124,7 +124,9 @@ const ImportView = () => {
         setIsImporting(true);
 
         try {
-            const mappedData = await mapApplicationData(parsedData, selectedEditionId, mapping);
+            // Generate a unique batch ID (timestamp) for this import session
+            const importBatchId = new Date().toISOString();
+            const mappedData = await mapApplicationData(parsedData, selectedEditionId, mapping, importBatchId);
             await batchSaveApplications(selectedEditionId, mappedData);
 
             setImportStatus({ type: 'success', message: `Successfully imported ${mappedData.length} records.` });
