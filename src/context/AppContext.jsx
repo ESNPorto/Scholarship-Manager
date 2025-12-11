@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { parseCSV, mapApplicationData } from '../utils/csvParser';
+import defaultDataUrl from '../assets/data.csv?url';
 
 const AppContext = createContext();
 
@@ -18,6 +19,11 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('scholarship_reviews', JSON.stringify(reviews));
     }, [reviews]);
+
+    // Auto-load data on mount
+    useEffect(() => {
+        loadData(defaultDataUrl);
+    }, []);
 
     const loadData = async (file) => {
         setIsLoading(true);

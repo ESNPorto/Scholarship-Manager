@@ -9,7 +9,15 @@ import { Users, FileCheck, Hourglass } from 'lucide-react';
 const DashboardCharts = ({ applications, stats }) => {
     // --- Data Processing for Charts ---
     const chartData = useMemo(() => {
-        if (!applications.length) return { destinations: [], overview: [] };
+        if (!applications || !applications.length) {
+            return {
+                destinations: [],
+                overview: [
+                    { name: 'Reviewed', value: 0 },
+                    { name: 'Pending', value: 0 }
+                ]
+            };
+        }
 
         // 1. Top Destinations
         const destinationCounts = {};
@@ -32,7 +40,7 @@ const DashboardCharts = ({ applications, stats }) => {
         return { destinations, overview };
     }, [applications, stats]);
 
-    if (applications.length === 0) return null;
+
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

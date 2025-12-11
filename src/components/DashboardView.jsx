@@ -5,10 +5,12 @@ import Papa from 'papaparse';
 import DashboardCharts from './DashboardCharts';
 
 const DashboardView = () => {
-    const { applications, reviews, navigateToReview, getReviewStatus } = useApp();
+    const { applications, reviews, navigateToReview, getReviewStatus, isLoading } = useApp();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'reviewed', 'in_progress', 'not_started'
     const [sortConfig, setSortConfig] = useState({ key: 'score', direction: 'desc' });
+
+
 
     // --- Helper: Calculate Score ---
     const getScore = (id) => {
@@ -146,22 +148,11 @@ const DashboardView = () => {
         return <span className="text-sm font-bold text-gray-400">#{rank}</span>;
     };
 
-    if (applications.length === 0) {
-        return (
-            <div className="text-center py-32 animate-in fade-in zoom-in duration-500">
-                <div className="bg-white p-12 rounded-3xl shadow-xl shadow-gray-200/50 inline-block max-w-md border border-gray-100">
-                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner" style={{ backgroundColor: 'rgba(0, 174, 239, 0.1)', color: '#00aeef' }}>
-                        <Upload className="w-10 h-10" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-3 tracking-tight">No Applications Loaded</h2>
-                    <p className="text-gray-500 mb-8 leading-relaxed">Upload a CSV file to start reviewing applications. The file should contain candidate details and document links.</p>
-                    <div className="text-sm text-gray-400 font-medium bg-gray-50 py-2 px-4 rounded-lg inline-block">
-                        Use the "Import CSV" button in the top right
-                    </div>
-                </div>
-            </div>
-        );
-    }
+
+
+
+
+
 
     return (
         <div className="space-y-8">

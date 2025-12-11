@@ -7,15 +7,12 @@ import { ArrowLeft, ExternalLink, FileText, CheckCircle2, Circle, Calendar, MapP
 const ComplianceRow = ({ title, url, verified, onVerify }) => {
     if (!url) return null;
     return (
-        <div
-            className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-200`}
-            style={verified ? { backgroundColor: 'rgba(122, 193, 67, 0.1)', borderColor: 'rgba(122, 193, 67, 0.3)' } : {}}
-        >
+        <div className="flex items-center justify-between py-4">
             <div className="flex items-center gap-3 overflow-hidden cursor-pointer" onClick={onVerify}>
                 <button className="flex-shrink-0 transition-colors" style={{ color: verified ? '#7ac143' : '#d1d5db' }}>
-                    {verified ? <CheckCircle2 className="w-5 h-5 fill-current" /> : <Circle className="w-5 h-5" />}
+                    {verified ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
                 </button>
-                <span className={`text-sm font-medium truncate`} style={{ color: verified ? '#5a9632' : '#374151' }}>
+                <span className="text-sm font-medium" style={{ color: verified ? '#7ac143' : '#1f2937' }}>
                     {title}
                 </span>
             </div>
@@ -23,9 +20,9 @@ const ComplianceRow = ({ title, url, verified, onVerify }) => {
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-50 hover:text-gray-700 rounded-md transition-colors"
+                className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
             >
-                Open <ExternalLink className="w-3 h-3" />
+                Open
             </a>
         </div>
     );
@@ -33,44 +30,37 @@ const ComplianceRow = ({ title, url, verified, onVerify }) => {
 
 const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, maxScore = 25 }) => {
     return (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            {/* Document Header */}
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
+        <div className="py-6 border-b border-gray-100 last:border-b-0">
+            {/* Header Row */}
+            <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3 cursor-pointer" onClick={onVerify}>
                     <button className="flex-shrink-0 transition-colors" style={{ color: verified ? '#7ac143' : '#d1d5db' }}>
-                        {verified ? <CheckCircle2 className="w-5 h-5 fill-current" /> : <Circle className="w-5 h-5" />}
+                        {verified ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
                     </button>
-                    <div className="flex flex-col">
-                        <span className={`text-sm font-semibold`} style={{ color: verified ? '#5a9632' : '#111827' }}>{title}</span>
-                        {verified && <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#7ac143' }}>Verified</span>}
-                    </div>
+                    <span className="text-base font-semibold text-gray-900">{title}</span>
                 </div>
                 {url && (
                     <a
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
-                        style={{ backgroundColor: 'rgba(46, 49, 146, 0.1)', color: '#2e3192' }}
+                        className="text-sm font-medium transition-colors"
+                        style={{ color: '#2e3192' }}
                     >
-                        Open Document <ExternalLink className="w-3 h-3" />
+                        Open Document →
                     </a>
                 )}
             </div>
 
-            {/* Scoring Section */}
-            <div className="p-5">
-                <div className="flex justify-between items-end mb-4">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Score</label>
-                    <span className="text-2xl font-bold tabular-nums" style={{ color: '#2e3192' }}>
-                        {score || 0}<span className="text-sm text-gray-300 font-normal ml-1">/{maxScore}</span>
-                    </span>
-                </div>
-                <div className="relative h-2 bg-gray-100 rounded-full">
-                    <div
-                        className="absolute top-0 left-0 h-full bg-blue-500 rounded-full transition-all duration-300"
-                        style={{ width: `${((score || 0) / maxScore) * 100}%`, backgroundColor: '#2e3192' }}
-                    ></div>
+            {/* Slider Row */}
+            <div className="flex items-center gap-6">
+                <div className="flex-1 relative">
+                    <div className="h-1.5 bg-gray-100 rounded-full">
+                        <div
+                            className="h-full rounded-full transition-all duration-300"
+                            style={{ width: `${((score || 0) / maxScore) * 100}%`, backgroundColor: '#2e3192' }}
+                        />
+                    </div>
                     <input
                         type="range"
                         min="0"
@@ -79,11 +69,10 @@ const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, 
                         onChange={(e) => onScoreChange(parseInt(e.target.value))}
                         className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
                     />
-                    <div
-                        className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-md pointer-events-none transition-all duration-300"
-                        style={{ left: `calc(${((score || 0) / maxScore) * 100}% - 10px)`, borderWidth: '2px', borderStyle: 'solid', borderColor: '#2e3192' }}
-                    ></div>
                 </div>
+                <span className="text-2xl font-semibold tabular-nums w-16 text-right" style={{ color: '#f47b20' }}>
+                    {score || 0}<span className="text-sm text-gray-300 font-normal">/{maxScore}</span>
+                </span>
             </div>
         </div>
     );
@@ -101,13 +90,14 @@ const CommentSection = ({ comments = [], onAddComment }) => {
 
     return (
         <div className="space-y-6">
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Comments & Notes</h3>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Notes</h3>
 
             {/* Comment List */}
             <div className="space-y-4">
                 {comments.length === 0 ? (
-                    <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                        <p className="text-sm text-gray-500">No comments yet. Start the discussion!</p>
+                    <div className="text-center py-10 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                        <p className="text-sm text-gray-500 font-medium">No notes yet</p>
+                        <p className="text-xs text-gray-400 mt-1">Start the discussion by adding a note below</p>
                     </div>
                 ) : (
                     comments.map((comment, index) => (
@@ -123,7 +113,7 @@ const CommentSection = ({ comments = [], onAddComment }) => {
                                         {new Date(comment.timestamp).toLocaleString()}
                                     </span>
                                 </div>
-                                <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg rounded-tl-none border border-gray-100">
+                                <div className="text-sm text-gray-600">
                                     {comment.text}
                                 </div>
                             </div>
@@ -142,12 +132,12 @@ const CommentSection = ({ comments = [], onAddComment }) => {
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         placeholder="Write a comment..."
-                        className="w-full min-h-[80px] p-3 pr-12 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00aeef]/20 focus:border-[#00aeef] text-sm resize-y"
+                        className="w-full min-h-[80px] p-4 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00aeef]/20 focus:border-[#00aeef] text-sm resize-none transition-all placeholder:text-gray-400"
                     />
                     <button
                         type="submit"
                         disabled={!newComment.trim()}
-                        className="absolute bottom-3 right-3 p-1.5 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="absolute bottom-3 right-3 p-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-90 active:scale-95 shadow-sm"
                         style={{ backgroundColor: '#2e3192' }}
                     >
                         <Send className="w-3.5 h-3.5" />
@@ -246,25 +236,23 @@ const ReviewView = () => {
                             <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-gray-400" /> {application.destinationCity}</span>
                         </div>
                     </div>
-                    <div
-                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border`}
-                        style={getReviewStatus(activeApplicationId) === 'reviewed'
-                            ? { backgroundColor: 'rgba(122, 193, 67, 0.1)', color: '#5a9632', borderColor: 'rgba(122, 193, 67, 0.3)' }
-                            : getReviewStatus(activeApplicationId) === 'in_progress'
-                                ? { backgroundColor: 'rgba(244, 123, 32, 0.1)', color: '#c4620f', borderColor: 'rgba(244, 123, 32, 0.3)' }
-                                : { backgroundColor: '#f9fafb', color: '#4b5563', borderColor: '#e5e7eb' }}
+                    <span
+                        className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
+                        style={{
+                            color: getReviewStatus(activeApplicationId) === 'reviewed' ? '#7ac143'
+                                : getReviewStatus(activeApplicationId) === 'in_progress' ? '#f47b20'
+                                    : '#9ca3af'
+                        }}
                     >
                         {getReviewStatus(activeApplicationId).replace('_', ' ')}
-                    </div>
+                    </span>
                 </div>
             </div>
 
             {/* 2. Compliance Checks (Non-scored docs) */}
-            <div className="mb-8 space-y-4">
-                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-gray-400" /> Compliance Checks
-                </h2>
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+            <div className="mb-10">
+                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Compliance Checks</h2>
+                <div className="divide-y divide-gray-100">
                     <ComplianceRow
                         title="IBAN & Bank Details"
                         url={application.documents?.iban}
@@ -287,10 +275,8 @@ const ReviewView = () => {
             </div>
 
             {/* 3. Evaluation Cards (Scored docs) */}
-            <div className="mb-12 space-y-8">
-                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-gray-400" /> Evaluation
-                </h2>
+            <div className="mb-10">
+                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Evaluation</h2>
 
                 <EvaluationCard
                     title="Motivation Letter"
@@ -320,30 +306,30 @@ const ReviewView = () => {
                 />
 
                 {/* Overall Fit (No doc) */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                    <div className="flex justify-between items-end mb-4">
-                        <label className="text-sm font-bold text-gray-900">Overall Fit & Impression</label>
-                        <span className="text-2xl font-bold tabular-nums" style={{ color: '#2e3192' }}>
-                            {review.fit || 0}<span className="text-sm text-gray-300 font-normal ml-1">/25</span>
-                        </span>
+                <div className="py-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <span className="text-base font-semibold text-gray-900">Overall Fit & Impression</span>
                     </div>
-                    <div className="relative h-2 bg-gray-100 rounded-full">
-                        <div
-                            className="absolute top-0 left-0 h-full bg-blue-500 rounded-full transition-all duration-300"
-                            style={{ width: `${((review.fit || 0) / 25) * 100}%`, backgroundColor: '#2e3192' }}
-                        ></div>
-                        <input
-                            type="range"
-                            min="0"
-                            max="25"
-                            value={review.fit || 0}
-                            onChange={(e) => handleScoreChange('fit', parseInt(e.target.value))}
-                            className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div
-                            className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-md pointer-events-none transition-all duration-300"
-                            style={{ left: `calc(${((review.fit || 0) / 25) * 100}% - 10px)`, borderWidth: '2px', borderStyle: 'solid', borderColor: '#2e3192' }}
-                        ></div>
+                    <div className="flex items-center gap-6">
+                        <div className="flex-1 relative">
+                            <div className="h-1.5 bg-gray-100 rounded-full">
+                                <div
+                                    className="h-full rounded-full transition-all duration-300"
+                                    style={{ width: `${((review.fit || 0) / 25) * 100}%`, backgroundColor: '#2e3192' }}
+                                />
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="25"
+                                value={review.fit || 0}
+                                onChange={(e) => handleScoreChange('fit', parseInt(e.target.value))}
+                                className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                        </div>
+                        <span className="text-2xl font-semibold tabular-nums w-16 text-right" style={{ color: '#f47b20' }}>
+                            {review.fit || 0}<span className="text-sm text-gray-300 font-normal">/25</span>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -355,7 +341,7 @@ const ReviewView = () => {
             />
 
             {/* 5. Sticky Bottom Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] p-4 z-50">
+            <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-100 p-4 z-50">
                 <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
                     <div className="flex flex-col">
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Score</span>
@@ -373,7 +359,7 @@ const ReviewView = () => {
                         <button
                             onClick={handleMarkReviewed}
                             className="px-6 py-2.5 text-white rounded-xl font-semibold transition-all shadow-lg active:scale-95 text-sm flex items-center gap-2"
-                            style={{ backgroundColor: '#7ac143', boxShadow: '0 4px 14px rgba(122, 193, 67, 0.25)' }}
+                            style={{ backgroundColor: '#2e3192', boxShadow: '0 4px 14px rgba(46, 49, 146, 0.25)' }}
                         >
                             <CheckCircle2 className="w-4 h-4" />
                             Mark as Reviewed

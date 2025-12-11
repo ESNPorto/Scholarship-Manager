@@ -43,16 +43,6 @@ const Layout = ({ children }) => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        <label className="flex items-center gap-2 px-4 py-2 text-white rounded-xl cursor-pointer transition-all duration-200 shadow-lg active:scale-95 text-sm font-medium" style={{ backgroundColor: '#2e3192', boxShadow: '0 4px 14px rgba(46, 49, 146, 0.25)' }}>
-                            <Upload className="w-4 h-4" />
-                            Import CSV
-                            <input
-                                type="file"
-                                accept=".csv"
-                                className="hidden"
-                                onChange={handleFileUpload}
-                            />
-                        </label>
                     </div>
                 </div>
             </header>
