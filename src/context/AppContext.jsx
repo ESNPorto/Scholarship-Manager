@@ -1,15 +1,41 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { parseCSV, mapApplicationData } from '../utils/csvParser';
-import { subscribeToReviews, saveReviewToDb, saveCommentToDb } from '../services/db';
-import defaultDataUrl from '../assets/data.csv?url';
+import { subscribeToReviews, saveReviewToDb, saveCommentToDb, getEditions, getApplicationsByEdition } from '../services/db';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
     const [applications, setApplications] = useState([]);
     const [reviews, setReviews] = useState({});
+
+    // new state for multi-edition
+    const [editions, setEditions] = useState([]);
+    const [currentEditionId, setCurrentEditionId] = useState(null);
+    const [isEditionsLoading, setIsEditionsLoading] = useState(true);
+
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    // Load Editions on mount
+    useEffect(() => {
+        const initEditions = async () => {
+            try {
+                const editionsData = await getEditions();
+                setEditions(editionsData);
+                if (editionsData.length > 0) {
+                    // Default to the most recent one (sorted in db service)
+                    const latest = editionsData[0];
+                    setCurrentEditionId(latest.id);
+                    await loadApplications(latest.id);
+                }
+            } catch (err) {
+                console.error("Failed to load editions:", err);
+                setError("Failed to load editions.");
+            } finally {
+                setIsEditionsLoading(false);
+            }
+        };
+        initEditions();
+    }, []);
 
     // Subscribe to reviews from Firestore
     useEffect(() => {
@@ -19,24 +45,44 @@ export const AppProvider = ({ children }) => {
         return () => unsubscribe();
     }, []);
 
-    // Auto-load data on mount
-    useEffect(() => {
-        loadData(defaultDataUrl);
-    }, []);
-
-    const loadData = async (file) => {
+    const loadApplications = async (editionId) => {
         setIsLoading(true);
         setError(null);
         try {
-            const rawData = await parseCSV(file);
-            const mappedData = await mapApplicationData(rawData);
-            setApplications(mappedData);
+            const rawApps = await getApplicationsByEdition(editionId);
+            // Map Firestore nested structure to flat structure expected by UI
+            const apps = rawApps.map(app => ({
+                ...app,
+                // Flatten Personal Info
+                name: app.personalInfo?.name || app.name || 'Unknown',
+                email: app.personalInfo?.email || app.email || '',
+                studentNumber: app.personalInfo?.studentNumber || app.studentNumber || '',
+                phoneNumber: app.personalInfo?.phoneNumber || app.phoneNumber || '',
+
+                // Flatten Academic Info
+                university: app.academicInfo?.university || app.university || '',
+                course: app.academicInfo?.course || app.course || '',
+
+                // Flatten Mobility Info
+                destinationCity: app.mobilityInfo?.destinationCity || app.destinationCity || '',
+                destinationCountry: app.mobilityInfo?.destinationCountry || app.destinationCountry || '',
+                semester: app.mobilityInfo?.semester || app.semester || '',
+                academicYear: app.mobilityInfo?.academicYear || app.academicYear || '',
+            }));
+
+            setApplications(apps);
         } catch (err) {
-            console.error("Error parsing CSV:", err);
-            setError("Failed to load data. Please check the CSV format.");
+            console.error("Error loading applications:", err);
+            setError("Failed to load applications for this edition.");
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const switchEdition = async (editionId) => {
+        if (editionId === currentEditionId) return;
+        setCurrentEditionId(editionId);
+        await loadApplications(editionId);
     };
 
     const updateReview = async (id, reviewData) => {
@@ -80,8 +126,6 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-
-
     const getReviewStatus = (id) => {
         const review = reviews[id];
         if (!review) return 'not_started';
@@ -92,14 +136,30 @@ export const AppProvider = ({ children }) => {
         return 'not_started';
     };
 
+    const refreshEditions = async () => {
+        const editionsData = await getEditions();
+        setEditions(editionsData);
+        // If we didn't have a selected edition (e.g. first run), select the new one
+        if (!currentEditionId && editionsData.length > 0) {
+            const latest = editionsData[0];
+            setCurrentEditionId(latest.id);
+            await loadApplications(latest.id);
+        }
+    };
+
     return (
         <AppContext.Provider value={{
             applications,
             reviews,
+            editions,
+            currentEditionId,
+            isEditionsLoading,
+            switchEdition,
+            refreshEditions,
+            loadApplications, // Exposed for manual reload after import
 
             isLoading,
             error,
-            loadData,
             updateReview,
             addReviewComment,
             getReviewStatus

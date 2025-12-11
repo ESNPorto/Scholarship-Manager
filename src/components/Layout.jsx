@@ -7,8 +7,8 @@ import { FileText, Upload, LogOut } from 'lucide-react';
 import logo from '../assets/favicon.png';
 
 const Layout = ({ children }) => {
-    const { loadData } = useApp();
     const { currentUser, logout } = useAuth();
+    const { editions, currentEditionId, switchEdition } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
     const [scrollProgress, setScrollProgress] = useState(0);
@@ -37,12 +37,7 @@ const Layout = ({ children }) => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const handleFileUpload = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            loadData(file);
-        }
-    };
+
 
     return (
         <div className="min-h-screen bg-gray-50/50 flex flex-col font-sans">
@@ -58,6 +53,24 @@ const Layout = ({ children }) => {
                     </div>
 
                     <div className="flex items-center gap-6">
+                        {/* Edition Selector */}
+                        {editions.length > 0 && (
+                            <div className="hidden md:flex items-center gap-2">
+                                <span className="text-sm text-gray-500">Edition:</span>
+                                <select
+                                    value={currentEditionId || ''}
+                                    onChange={(e) => switchEdition(e.target.value)}
+                                    className="text-sm font-medium text-gray-900 bg-transparent border-none focus:ring-0 cursor-pointer py-1 pr-8"
+                                >
+                                    {editions.map(edition => (
+                                        <option key={edition.id} value={edition.id}>
+                                            {edition.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
                         {currentUser && (
                             <div className="relative">
                                 <button
@@ -87,6 +100,16 @@ const Layout = ({ children }) => {
                                             <p className="text-sm font-medium text-gray-900 truncate">{currentUser.displayName}</p>
                                             <p className="text-xs text-gray-500 truncate">{currentUser.email}</p>
                                         </div>
+                                        <button
+                                            onClick={() => {
+                                                navigate('/import');
+                                                setIsProfileOpen(false);
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                                        >
+                                            <Upload className="w-4 h-4" />
+                                            Import Manager
+                                        </button>
                                         <button
                                             onClick={handleLogout}
                                             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"

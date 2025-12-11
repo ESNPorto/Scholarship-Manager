@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import DashboardView from './components/DashboardView';
 import ReviewView from './components/ReviewView';
+import ImportView from './components/ImportView';
 import Login from './components/Login';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider } from './context/AuthContext';
@@ -22,6 +23,11 @@ const AppContent = () => {
             <Route path="/review/:id" element={
               <PrivateRoute>
                 <ReviewView />
+              </PrivateRoute>
+            } />
+            <Route path="/import" element={
+              <PrivateRoute>
+                <ImportView />
               </PrivateRoute>
             } />
           </Routes>
