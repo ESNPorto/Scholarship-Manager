@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Plus, FileText, CheckCircle, AlertCircle, Database, Edit, Trash2, X } from 'lucide-react';
 import { createEdition, batchSaveApplications, updateEdition, deleteEdition, getApplicationsByEdition } from '../services/db';
-import { parseCSV, mapApplicationData } from '../utils/csvParser';
+import { parseCSV, mapApplicationData, CSV_FIELD_CONFIG } from '../utils/csvParser';
 import { useApp } from '../context/AppContext';
 
 import ColumnMappingModal from './ColumnMappingModal';
@@ -34,6 +34,7 @@ const ImportView = () => {
     // Preview Data State
     const [previewApps, setPreviewApps] = useState([]);
     const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+    const [visibleLimit, setVisibleLimit] = useState(50);
 
     useEffect(() => {
         if (editions.length > 0 && !selectedEditionId) {
@@ -52,6 +53,7 @@ const ImportView = () => {
             try {
                 const apps = await getApplicationsByEdition(selectedEditionId);
                 setPreviewApps(apps);
+                setVisibleLimit(50); // Reset limit on new load
             } catch (err) {
                 console.error("Failed to load preview data:", err);
             } finally {
@@ -487,103 +489,67 @@ const ImportView = () => {
                             <table className="w-full text-left text-xs whitespace-nowrap">
                                 <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
                                     <tr>
-                                        {/* Personal Info */}
-                                        <th className="px-4 py-3 bg-gray-50 sticky left-0 z-10 shadow-sm">Name</th>
-                                        <th className="px-4 py-3">Email</th>
-
-                                        {/* Academic Info */}
-                                        <th className="px-4 py-3 bg-blue-50/10">University</th>
-                                        <th className="px-4 py-3 bg-blue-50/10">Course</th>
-
-                                        {/* Mobility Info */}
-                                        <th className="px-4 py-3 bg-green-50/10 text-center">Country</th>
-                                        <th className="px-4 py-3 bg-green-50/10">City</th>
-                                        <th className="px-4 py-3 bg-green-50/10">Sem</th>
-                                        <th className="px-4 py-3 bg-green-50/10">Year</th>
-
-                                        {/* Financial Info */}
-                                        <th className="px-4 py-3 bg-yellow-50/10">IBAN</th>
-                                        <th className="px-4 py-3 bg-yellow-50/10">Bank Owner</th>
-
-                                        {/* Documents */}
-                                        <th className="px-4 py-3 bg-purple-50/10">Motivation</th>
-                                        <th className="px-4 py-3 bg-purple-50/10">Learning Agr.</th>
-                                        <th className="px-4 py-3 bg-purple-50/10">Transcript</th>
-                                        <th className="px-4 py-3 bg-purple-50/10">Social/Disad.</th>
+                                        {CSV_FIELD_CONFIG.map((field) => (
+                                            <th
+                                                key={field.key}
+                                                className={`px-4 py-3 ${field.key === 'name' ? 'sticky left-0 z-10 shadow-sm bg-gray-50' : ''}`}
+                                            >
+                                                {field.label}
+                                            </th>
+                                        ))}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {previewApps.slice(0, 50).map((app) => (
+                                    {previewApps.slice(0, visibleLimit).map((app) => (
                                         <tr key={app.id} className="hover:bg-gray-50 transition-colors">
-                                            {/* Personal */}
-                                            <td className="px-4 py-3 font-medium text-gray-900 sticky left-0 bg-white group-hover:bg-gray-50 z-10 shadow-sm border-r border-gray-100">
-                                                {app.personalInfo?.name || app.name || 'Unknown'}
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-600 max-w-[150px] truncate" title={app.personalInfo?.email || app.email}>
-                                                {app.personalInfo?.email || app.email || '-'}
-                                            </td>
+                                            {CSV_FIELD_CONFIG.map((field) => {
+                                                // Resolve path: e.g. "personalInfo.email" -> app.personalInfo?.email
+                                                const value = field.path.split('.').reduce((obj, key) => obj?.[key], app);
 
-                                            {/* Academic */}
-                                            <td className="px-4 py-3 text-gray-600 max-w-[150px] truncate bg-blue-50/5" title={app.academicInfo?.university || app.university}>
-                                                {app.academicInfo?.university || app.university || '-'}
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-600 max-w-[150px] truncate bg-blue-50/5">
-                                                {app.academicInfo?.course || app.course || '-'}
-                                            </td>
+                                                if (field.key === 'name') {
+                                                    return (
+                                                        <td key={field.key} className="px-4 py-3 font-medium text-gray-900 sticky left-0 bg-white group-hover:bg-gray-50 z-10 shadow-sm border-r border-gray-100">
+                                                            {value || 'Unknown'}
+                                                        </td>
+                                                    );
+                                                }
 
-                                            {/* Mobility */}
-                                            <td className="px-4 py-3 text-center bg-green-50/5">
-                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                                    {app.mobilityInfo?.destinationCountry || app.destinationCountry || '-'}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-600 max-w-[100px] truncate bg-green-50/5">
-                                                {app.mobilityInfo?.destinationCity || app.destinationCity || '-'}
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-600 bg-green-50/5">
-                                                {app.mobilityInfo?.semester || app.semester || '-'}
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-600 bg-green-50/5">
-                                                {app.mobilityInfo?.academicYear || app.academicYear || '-'}
-                                            </td>
+                                                if (field.type === 'link') {
+                                                    return (
+                                                        <td key={field.key} className="px-4 py-3 text-blue-600 max-w-[150px] truncate">
+                                                            {value ? (
+                                                                <a href={value} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                                    View File
+                                                                </a>
+                                                            ) : '-'}
+                                                        </td>
+                                                    );
+                                                }
 
-                                            {/* Financial */}
-                                            <td className="px-4 py-3 text-gray-600 max-w-[150px] truncate font-mono text-[10px] bg-yellow-50/5">
-                                                {app.financialInfo?.iban || '-'}
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-600 max-w-[120px] truncate bg-yellow-50/5">
-                                                {app.financialInfo?.bankAccountOwner || '-'}
-                                            </td>
-
-                                            {/* Documents - Links with truncation */}
-                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
-                                                <a href={app.documents?.motivationLetter} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                                    {app.documents?.motivationLetter || '-'}
-                                                </a>
-                                            </td>
-                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
-                                                <a href={app.documents?.learningAgreement} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                                    {app.documents?.learningAgreement || '-'}
-                                                </a>
-                                            </td>
-                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
-                                                <a href={app.documents?.transcriptOfRecords} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                                    {app.documents?.transcriptOfRecords || '-'}
-                                                </a>
-                                            </td>
-                                            <td className="px-4 py-3 text-blue-600 max-w-[120px] truncate bg-purple-50/5">
-                                                <a href={app.documents?.socialDisadvantageItem} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                                    {app.documents?.socialDisadvantageItem || '-'}
-                                                </a>
-                                            </td>
+                                                return (
+                                                    <td key={field.key} className="px-4 py-3 text-gray-600 max-w-[200px] truncate" title={value}>
+                                                        {value || '-'}
+                                                    </td>
+                                                );
+                                            })}
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         )}
-                        {previewApps.length > 50 && (
-                            <div className="p-3 text-center text-xs text-gray-400 border-t border-gray-100 bg-gray-50">
-                                Showing first 50 of {previewApps.length} records
+                        {previewApps.length > 0 && (
+                            <div className="p-4 border-t border-gray-100 bg-gray-50 flex flex-col items-center gap-2">
+                                <p className="text-xs text-gray-500">
+                                    Showing {Math.min(visibleLimit, previewApps.length)} of {previewApps.length} records
+                                </p>
+                                {visibleLimit < previewApps.length && (
+                                    <button
+                                        onClick={() => setVisibleLimit(prev => prev + 50)}
+                                        className="text-sm font-medium text-esn-dark-blue hover:text-esn-dark-blue/80 hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors"
+                                    >
+                                        Load more records
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>

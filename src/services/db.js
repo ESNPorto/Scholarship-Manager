@@ -112,12 +112,22 @@ export const batchSaveApplications = async (editionId, applications) => {
             chunk.forEach((app) => {
                 const appRef = doc(collection(db, 'applications'), app.id);
                 // Ensure editionId is attached
+                const { review, ...appData } = app;
                 const appWithEdition = {
-                    ...app,
+                    ...appData,
                     editionId: editionId,
                     importedAt: new Date().toISOString()
                 };
                 batch.set(appRef, appWithEdition, { merge: true });
+
+                // Also save initial review state to reviews collection
+                if (review) {
+                    const reviewRef = doc(collection(db, 'reviews'), app.id);
+                    batch.set(reviewRef, {
+                        ...review,
+                        lastUpdated: new Date().toISOString()
+                    }, { merge: true });
+                }
             });
             await batch.commit();
         }

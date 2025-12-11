@@ -144,6 +144,12 @@ const DashboardView = () => {
                         <Clock className="w-3.5 h-3.5" /> In Progress
                     </span>
                 );
+            case 'discarded':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-esn-magenta/10 text-esn-magenta border-esn-magenta/30">
+                        <Circle className="w-3.5 h-3.5 fill-current" /> Discarded
+                    </span>
+                );
             default:
                 return (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
@@ -195,6 +201,7 @@ const DashboardView = () => {
                             <option value="not_started">Not Started</option>
                             <option value="in_progress">In Progress</option>
                             <option value="reviewed">Reviewed</option>
+                            <option value="discarded">Discarded</option>
                         </select>
                         <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                     </div>

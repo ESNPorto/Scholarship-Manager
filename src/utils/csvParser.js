@@ -1,25 +1,27 @@
 import Papa from 'papaparse';
 
 export const CSV_FIELD_CONFIG = [
-    { key: 'name', label: 'Candidate Name', defaultHeader: 'Nome', required: true },
-    { key: 'email', label: 'Email Address', defaultHeader: 'E-mail', required: true },
-    { key: 'birthDate', label: 'Birth Date', defaultHeader: 'Data de Nascimento' },
-    { key: 'address', label: 'Fiscal Address', defaultHeader: 'Morada Fiscal' },
-    { key: 'contact', label: 'Contact Permission', defaultHeader: 'Desejas ser contactado para saber quando abre o nosso recrutamento?' },
-    { key: 'gdpr', label: 'GDPR Acceptance', defaultHeader: 'O tratamento de dados é aceite?' },
-    { key: 'university', label: 'University', defaultHeader: 'Faculdade/ Universidade que frequentas' },
-    { key: 'course', label: 'Course', defaultHeader: 'Curso que frequentas' },
-    { key: 'currentYear', label: 'Current Year', defaultHeader: 'Ano em que te encontras' },
-    { key: 'applicationYear', label: 'Application/Mobility Year', defaultHeader: 'Ano' },
-    { key: 'destinationCity', label: 'Destination City', defaultHeader: 'Cidade e País de Destino' },
-    { key: 'destinationCountry', label: 'Destination Country', defaultHeader: 'País' },
+    { key: 'name', label: 'Candidate Name', defaultHeader: 'Nome', required: true, path: 'personalInfo.name', type: 'text' },
+    { key: 'email', label: 'Email Address', defaultHeader: 'E-mail', required: true, path: 'personalInfo.email', type: 'text' },
+    { key: 'birthDate', label: 'Birth Date', defaultHeader: 'Data de Nascimento', path: 'personalInfo.birthDate', type: 'text' },
+    { key: 'address', label: 'Fiscal Address', defaultHeader: 'Morada Fiscal', path: 'personalInfo.address', type: 'text' },
+    { key: 'contact', label: 'Contact Permission', defaultHeader: 'Desejas ser contactado para saber quando abre o nosso recrutamento?', path: 'personalInfo.contact', type: 'text' },
+    { key: 'gdpr', label: 'GDPR Acceptance', defaultHeader: 'O tratamento de dados é aceite?', path: 'personalInfo.gdpr', type: 'text' },
+    { key: 'university', label: 'University', defaultHeader: 'Faculdade/ Universidade que frequentas', path: 'academicInfo.university', type: 'text' },
+    { key: 'course', label: 'Course', defaultHeader: 'Curso que frequentas', path: 'academicInfo.course', type: 'text' },
+    { key: 'currentYear', label: 'Current Year', defaultHeader: 'Ano em que te encontras', path: 'academicInfo.currentYear', type: 'text' },
+    { key: 'applicationYear', label: 'Application/Mobility Year', defaultHeader: 'Ano', path: 'academicInfo.applicationYear', type: 'text' },
+    { key: 'destinationCity', label: 'Destination City', defaultHeader: 'Cidade e País de Destino', path: 'mobilityInfo.destinationCity', type: 'text' },
+    { key: 'destinationCountry', label: 'Destination Country', defaultHeader: 'País', path: 'mobilityInfo.destinationCountry', type: 'text' },
+    { key: 'destinationUniversity', label: 'Destination University', defaultHeader: 'Universidade de Destino', path: 'mobilityInfo.destinationUniversity', type: 'text' },
     // Documents
-    { key: 'proofOfIban', label: 'Proof of IBAN', defaultHeader: 'Identificação do IBAN e do titular da conta para o qual pretende a transferência do valor da bolsa, caso lhe seja atribuída (ficheiro .pdf)' },
-    { key: 'motivationLetter', label: 'Motivation Letter', defaultHeader: 'Carta de Motivação ( ficheiro .pdf)' },
-    { key: 'transcriptOfRecords', label: 'Transcript of Records', defaultHeader: 'Comprovativo de aproveitamento académico (ficheiro .pdf)' },
-    { key: 'learningAgreement', label: 'Learning Agreement', defaultHeader: 'Fotocópia do Learning Agreement assinado ou Carta de Aceitação assinada da instituição de destino (ficheiro .pdf)' },
-    { key: 'socialDisadvantageItem', label: 'IRS Declaration', defaultHeader: 'Fotocópia da declaração do IRS correspondente ao ano civil anterior ao início do ano letivo anterior a que se refere a candidatura à bolsa (ficheiro .pdf)' },
-    { key: 'presentation', label: 'Presentation', defaultHeader: 'Apresentação Powerpoint/Canva a explicares o porquê de teres escolhido o Programa Erasmus+ e sobre como achas que a mobilidade internacional impacta a vida pessoal, académica e profissional dos jovens (ficheiro .pdf)' }
+    { key: 'citizenCard', label: 'Citizen Card / Passport', defaultHeader: 'Fotocópia do Cartão de Cidadão/ Bilhete de Identidade ou Passaporte (ficheiro .pdf)', path: 'documents.citizenCard', type: 'link' },
+    { key: 'proofOfIban', label: 'Proof of IBAN', defaultHeader: 'Identificação do IBAN e do titular da conta para o qual pretende a transferência do valor da bolsa, caso lhe seja atribuída (ficheiro .pdf)', path: 'documents.proofOfIban', type: 'link' },
+    { key: 'motivationLetter', label: 'Motivation Letter', defaultHeader: 'Carta de Motivação ( ficheiro .pdf)', path: 'documents.motivationLetter', type: 'link' },
+    { key: 'transcriptOfRecords', label: 'Transcript of Records', defaultHeader: 'Comprovativo de aproveitamento académico (ficheiro .pdf)', path: 'documents.transcriptOfRecords', type: 'link' },
+    { key: 'learningAgreement', label: 'Learning Agreement', defaultHeader: 'Fotocópia do Learning Agreement assinado ou Carta de Aceitação assinada da instituição de destino (ficheiro .pdf)', path: 'documents.learningAgreement', type: 'link' },
+    { key: 'socialDisadvantageItem', label: 'IRS Declaration', defaultHeader: 'Fotocópia da declaração do IRS correspondente ao ano civil anterior ao início do ano letivo anterior a que se refere a candidatura à bolsa (ficheiro .pdf)', path: 'documents.socialDisadvantageItem', type: 'link' },
+    { key: 'presentation', label: 'Presentation', defaultHeader: 'Apresentação Powerpoint/Canva a explicares o porquê de teres escolhido o Programa Erasmus+ e sobre como achas que a mobilidade internacional impacta a vida pessoal, académica e profissional dos jovens (ficheiro .pdf)', path: 'documents.presentation', type: 'link' }
 ];
 
 export const parseCSV = (fileOrUrl) => {
@@ -81,10 +83,57 @@ export const mapApplicationData = async (rawData, editionId, columnMapping) => {
         // Create a unique ID based on email AND edition
         const id = await hashString(`${email}-${editionId}`);
 
+        // Define required document keys
+        const requiredDocs = [
+            'learningAgreement',
+            'motivationLetter',
+            'transcriptOfRecords',
+            'socialDisadvantageItem',
+            'presentation',
+            'proofOfIban',
+            'citizenCard'
+        ];
+
+        // Check for missing documents
+        const missingDocs = [];
+        const documents = {
+            proofOfIban: getValue('proofOfIban'),
+            motivationLetter: getValue('motivationLetter'),
+            transcriptOfRecords: getValue('transcriptOfRecords'),
+            learningAgreement: getValue('learningAgreement'),
+            socialDisadvantageItem: getValue('socialDisadvantageItem'),
+            presentation: getValue('presentation'),
+            citizenCard: getValue('citizenCard')
+        };
+
+        requiredDocs.forEach(key => {
+            const docUrl = documents[key];
+            // Check if the URL is missing or empty (ignoring potential "No file" type strings if relying purely on truthiness)
+            if (!docUrl || docUrl.trim() === '') {
+                // Map key to readable label
+                const label = CSV_FIELD_CONFIG.find(f => f.key === key)?.label || key;
+                missingDocs.push(label);
+            }
+        });
+
+        let status = 'not_started';
+        const comments = [];
+
+        if (missingDocs.length > 0) {
+            status = 'discarded';
+            const missingList = missingDocs.join(', ');
+            comments.push({
+                text: `Application automatically discarded due to missing required documents: ${missingList}.`,
+                timestamp: new Date().toISOString(),
+                author: 'System',
+                authorId: 'system'
+            });
+        }
+
         return {
             id: id,
             editionId: editionId,
-            status: 'submitted',
+            status: 'submitted', // Original mapping kept this 'submitted', but our review status is nested
             importedAt: new Date().toISOString(),
             personalInfo: {
                 name: name,
@@ -103,6 +152,7 @@ export const mapApplicationData = async (rawData, editionId, columnMapping) => {
             mobilityInfo: {
                 destinationCity: getValue('destinationCity'),
                 destinationCountry: (getValue('destinationCountry') || '').trim(),
+                destinationUniversity: getValue('destinationUniversity'),
                 semester: null,
                 academicYear: getValue('applicationYear') // Often same as valid application year in this context
             },
@@ -110,18 +160,11 @@ export const mapApplicationData = async (rawData, editionId, columnMapping) => {
                 iban: null,
                 bankAccountOwner: null
             },
-            documents: {
-                proofOfIban: getValue('proofOfIban'),
-                motivationLetter: getValue('motivationLetter'),
-                transcriptOfRecords: getValue('transcriptOfRecords'),
-                learningAgreement: getValue('learningAgreement'),
-                socialDisadvantageItem: getValue('socialDisadvantageItem'),
-                presentation: getValue('presentation')
-            },
+            documents: documents,
             review: {
-                status: 'not_started',
+                status: status,
                 score: 0,
-                comments: []
+                comments: comments
             }
         };
     });

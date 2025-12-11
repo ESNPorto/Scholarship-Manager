@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { calculateScore } from '../utils/scoring';
 import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FileCheck, FileBarChart, User, GraduationCap, MapPin, Home, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { FileCheck, FileBarChart, User, GraduationCap, MapPin, Home, ShieldCheck, ShieldAlert, Mail, Calendar, Building, Map } from 'lucide-react';
 import DocumentPreviewModal from './DocumentPreviewModal';
 
 // Imported Components
@@ -74,9 +74,13 @@ const ReviewView = () => {
 
         const updates = { verifiedDocs: newVerifiedDocs };
 
-        // Auto-update status to 'reviewed' if all 6 checks are complete
+        // Auto-update status to 'reviewed' if all checks are complete
+        // Dynamic total based on whether citizen card exists
+        const hasCitizenCard = !!application.documents?.citizenCard;
+        const requiredTotal = hasCitizenCard ? 7 : 6;
+
         const newVerifiedCount = Object.values(newVerifiedDocs).filter(Boolean).length;
-        if (newVerifiedCount === 6) {
+        if (newVerifiedCount === requiredTotal) {
             updates.status = 'reviewed';
         } else if (getReviewStatus(id) === 'not_started') {
             updates.status = 'in_progress';
@@ -112,7 +116,9 @@ const ReviewView = () => {
 
     const totalScore = calculateScore(review);
     const verifiedCount = Object.values(review.verifiedDocs || {}).filter(Boolean).length;
-    const totalDocs = 6; // Fixed number of checks
+    // Dynamic total docs
+    const hasCitizenCard = !!application.documents?.citizenCard;
+    const totalDocs = hasCitizenCard ? 7 : 6;
     const progress = Math.round((verifiedCount / totalDocs) * 100);
 
     // --- Render ---
@@ -130,21 +136,47 @@ const ReviewView = () => {
             <div className="max-w-3xl mx-auto px-4 pt-8">
                 {/* 1. Header & Navigation */}
                 <div className="mb-8">
-
-
-                    <div className="flex items-start justify-between gap-6">
+                    <div className="flex items-start justify-between gap-6 mb-8">
                         <div>
                             <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-3">{application.name}</h1>
-                            <div className="flex flex-wrap gap-3 text-sm">
+                            {/* Primary Tags (Course, Location, Uni) */}
+                            <div className="flex flex-wrap gap-3 text-sm mb-3">
                                 <span className="px-3 py-1 rounded-full bg-esn-dark-blue/10 text-esn-dark-blue font-medium flex items-center gap-1.5">
                                     <GraduationCap className="w-4 h-4" /> {application.course}
                                 </span>
                                 <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1.5">
-                                    <MapPin className="w-4 h-4" /> {application.destinationCity}
+                                    <MapPin className="w-4 h-4" /> {application.mobilityInfo?.destinationCity}{application.mobilityInfo?.destinationCountry ? `, ${application.mobilityInfo.destinationCountry}` : ''}
                                 </span>
                                 <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1.5">
-                                    <Home className="w-4 h-4" /> {application.university}
+                                    <Home className="w-4 h-4" /> {application.academicInfo?.university}
                                 </span>
+                                {application.mobilityInfo?.destinationUniversity && (
+                                    <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1.5">
+                                        <Building className="w-4 h-4" /> Host: {application.mobilityInfo.destinationUniversity}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Secondary Tags (Personal & Details) */}
+                            <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+                                <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1.5">
+                                    <Mail className="w-4 h-4" /> {application.personalInfo?.email}
+                                </span>
+                                {application.personalInfo?.birthDate && (
+                                    <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1.5">
+                                        <Calendar className="w-4 h-4" /> {application.personalInfo.birthDate}
+                                    </span>
+                                )}
+                                {application.academicInfo?.currentYear && (
+                                    <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1.5">
+                                        <User className="w-4 h-4" /> Year: {application.academicInfo.currentYear}
+                                    </span>
+                                )}
+                                {application.personalInfo?.address && (
+                                    <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1.5">
+                                        <Map className="w-4 h-4" /> {application.personalInfo.address}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -212,6 +244,16 @@ const ReviewView = () => {
                                 onVerify={() => toggleDocumentVerification('learningAgreement')}
                                 onPreview={setPreviewDoc}
                             />
+                            {application.documents?.citizenCard && (
+                                <ComplianceCard
+                                    title="Citizen Card"
+                                    type="citizenCard"
+                                    url={application.documents.citizenCard}
+                                    verified={review.verifiedDocs?.citizenCard}
+                                    onVerify={() => toggleDocumentVerification('citizenCard')}
+                                    onPreview={setPreviewDoc}
+                                />
+                            )}
                         </div>
                     </div>
 
