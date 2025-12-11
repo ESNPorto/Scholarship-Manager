@@ -1,16 +1,16 @@
 import React from 'react';
-import { useApp } from './context/AppContext';
+import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import DashboardView from './components/DashboardView';
 import ReviewView from './components/ReviewView';
 
 const AppContent = () => {
-  const { view } = useApp();
-
   return (
     <Layout>
-      {view === 'dashboard' && <DashboardView />}
-      {view === 'review' && <ReviewView />}
+      <Routes>
+        <Route path="/" element={<DashboardView />} />
+        <Route path="/review/:id" element={<ReviewView />} />
+      </Routes>
     </Layout>
   );
 };

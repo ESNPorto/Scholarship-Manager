@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Trophy, Medal, Award, FileDown, Download } from 'lucide-react';
 import Papa from 'papaparse';
 import DashboardCharts from './DashboardCharts';
 
 const DashboardView = () => {
-    const { applications, reviews, navigateToReview, getReviewStatus, isLoading } = useApp();
+    const { applications, reviews, getReviewStatus, isLoading } = useApp();
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'reviewed', 'in_progress', 'not_started'
     const [sortConfig, setSortConfig] = useState({ key: 'score', direction: 'desc' });
@@ -225,7 +227,7 @@ const DashboardView = () => {
                             {filteredApplications.map((app) => (
                                 <tr
                                     key={app.id}
-                                    onClick={() => navigateToReview(app.id)}
+                                    onClick={() => navigate(`/review/${app.id}`)}
                                     className="hover:bg-gray-100/50 transition-colors group cursor-pointer"
                                 >
                                     <td className="px-6 py-4 text-center">

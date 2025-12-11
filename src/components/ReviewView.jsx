@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, FileText, CheckCircle2, Circle, Calendar, MapPin, GraduationCap, Mail, Home, Send, User, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 
 // --- Helper Components ---
@@ -102,12 +103,9 @@ const CommentSection = ({ comments = [], onAddComment }) => {
                 ) : (
                     comments.map((comment, index) => (
                         <div key={index} className="flex gap-3 group">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-xs" style={{ backgroundColor: 'rgba(46, 49, 146, 0.1)', color: '#2e3192' }}>
-                                {comment.author?.[0] || 'U'}
-                            </div>
+                            <div className="w-2 h-2 rounded-full bg-gray-300 mt-2 flex-shrink-0"></div>
                             <div className="flex-1 space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm font-semibold text-gray-900">{comment.author || 'User'}</span>
                                     <span className="text-xs text-gray-400 flex items-center gap-1">
                                         <Clock className="w-3 h-3" />
                                         {new Date(comment.timestamp).toLocaleString()}
@@ -124,14 +122,11 @@ const CommentSection = ({ comments = [], onAddComment }) => {
 
             {/* Input */}
             <form onSubmit={handleSubmit} className="flex gap-3 items-start">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-gray-400" />
-                </div>
                 <div className="flex-1 relative">
                     <textarea
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Write a comment..."
+                        placeholder="Add a note..."
                         className="w-full min-h-[80px] p-4 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00aeef]/20 focus:border-[#00aeef] text-sm resize-none transition-all placeholder:text-gray-400"
                     />
                     <button
@@ -151,28 +146,37 @@ const CommentSection = ({ comments = [], onAddComment }) => {
 // --- Main Component ---
 
 const ReviewView = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
     const {
-        activeApplicationId,
         applications,
         reviews,
         updateReview,
-        navigateToDashboard,
-        getReviewStatus
+        getReviewStatus,
+        isLoading
     } = useApp();
 
-    const application = applications.find(app => app.id === activeApplicationId);
-    const review = reviews[activeApplicationId] || {};
+    const application = applications.find(app => String(app.id) === id);
+    const review = reviews[id] || {};
 
     useEffect(() => {
         window.scrollTo(0, 0);
-    }, [activeApplicationId]);
+    }, [id]);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2e3192]"></div>
+            </div>
+        );
+    }
 
     if (!application) return <div>Application not found</div>;
 
     // --- Handlers ---
 
     const handleScoreChange = (field, value) => {
-        updateReview(activeApplicationId, { [field]: value });
+        updateReview(id, { [field]: value });
     };
 
     const toggleDocumentVerification = (docKey) => {
@@ -181,7 +185,7 @@ const ReviewView = () => {
             ...verifiedDocs,
             [docKey]: !verifiedDocs[docKey]
         };
-        updateReview(activeApplicationId, { verifiedDocs: newVerifiedDocs });
+        updateReview(id, { verifiedDocs: newVerifiedDocs });
     };
 
     const handleAddComment = (text) => {
@@ -191,19 +195,19 @@ const ReviewView = () => {
             author: 'Me' // In a real app, get from auth context
         };
         const updatedComments = [...(review.comments || []), newComment];
-        updateReview(activeApplicationId, { comments: updatedComments });
+        updateReview(id, { comments: updatedComments });
     };
 
     const handleSave = () => {
-        if (getReviewStatus(activeApplicationId) === 'not_started') {
-            updateReview(activeApplicationId, { status: 'in_progress' });
+        if (getReviewStatus(id) === 'not_started') {
+            updateReview(id, { status: 'in_progress' });
         }
-        navigateToDashboard();
+        navigate('/');
     };
 
     const handleMarkReviewed = () => {
-        updateReview(activeApplicationId, { status: 'reviewed' });
-        navigateToDashboard();
+        updateReview(id, { status: 'reviewed' });
+        navigate('/');
     };
 
     // --- Derived State ---
@@ -220,7 +224,7 @@ const ReviewView = () => {
             {/* 1. Header & Navigation */}
             <div className="mb-8">
                 <button
-                    onClick={navigateToDashboard}
+                    onClick={() => navigate('/')}
                     className="mb-4 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" /> Back to Dashboard
@@ -239,12 +243,12 @@ const ReviewView = () => {
                     <span
                         className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
                         style={{
-                            color: getReviewStatus(activeApplicationId) === 'reviewed' ? '#7ac143'
-                                : getReviewStatus(activeApplicationId) === 'in_progress' ? '#f47b20'
+                            color: getReviewStatus(id) === 'reviewed' ? '#7ac143'
+                                : getReviewStatus(id) === 'in_progress' ? '#f47b20'
                                     : '#9ca3af'
                         }}
                     >
-                        {getReviewStatus(activeApplicationId).replace('_', ' ')}
+                        {getReviewStatus(id).replace('_', ' ')}
                     </span>
                 </div>
             </div>

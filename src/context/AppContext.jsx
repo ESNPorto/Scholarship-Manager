@@ -10,8 +10,6 @@ export const AppProvider = ({ children }) => {
         const saved = localStorage.getItem('scholarship_reviews');
         return saved ? JSON.parse(saved) : {};
     });
-    const [view, setView] = useState('dashboard'); // 'dashboard', 'review', 'summary'
-    const [activeApplicationId, setActiveApplicationId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -47,19 +45,7 @@ export const AppProvider = ({ children }) => {
         }));
     };
 
-    const navigateToReview = (id) => {
-        setActiveApplicationId(id);
-        setView('review');
-    };
 
-    const navigateToDashboard = () => {
-        setActiveApplicationId(null);
-        setView('dashboard');
-    };
-
-    const navigateToSummary = () => {
-        setView('summary');
-    };
 
     const getReviewStatus = (id) => {
         const review = reviews[id];
@@ -75,15 +61,11 @@ export const AppProvider = ({ children }) => {
         <AppContext.Provider value={{
             applications,
             reviews,
-            view,
-            activeApplicationId,
+
             isLoading,
             error,
             loadData,
             updateReview,
-            navigateToReview,
-            navigateToDashboard,
-            navigateToSummary,
             getReviewStatus
         }}>
             {children}

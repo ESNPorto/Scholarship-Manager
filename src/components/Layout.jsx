@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 import { FileText, Upload } from 'lucide-react';
 
 import logo from '../assets/favicon.png';
 
 const Layout = ({ children }) => {
-    const { navigateToDashboard, loadData } = useApp();
+    const { loadData } = useApp();
+    const navigate = useNavigate();
     const [scrollProgress, setScrollProgress] = useState(0);
 
     useEffect(() => {
@@ -36,7 +38,7 @@ const Layout = ({ children }) => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div
                         className="flex items-center gap-3 cursor-pointer group"
-                        onClick={navigateToDashboard}
+                        onClick={() => navigate('/')}
                     >
                         <img src={logo} alt="Scholarship Manager Logo" className="w-8 h-8 object-contain group-hover:scale-105 transition-transform duration-200" />
                         <h1 className="text-lg font-bold text-gray-900 tracking-tight">Scholarship Manager</h1>
