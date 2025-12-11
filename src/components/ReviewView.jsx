@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, FileText, CheckCircle2, Circle, Calendar, MapPin, GraduationCap, Mail, Home, Send, User, Clock, ChevronDown, ChevronUp, Eye } from 'lucide-react';
 import DocumentPreviewModal from './DocumentPreviewModal';
@@ -81,39 +82,106 @@ const EvaluationCard = ({ title, url, verified, onVerify, score, onScoreChange, 
     );
 };
 
-const CommentSection = ({ comments = [], onAddComment }) => {
+const CommentSection = ({ comments = [], onAddComment, currentUser }) => {
     const [newComment, setNewComment] = useState('');
+    const [isFocused, setIsFocused] = useState(false);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!newComment.trim()) return;
         onAddComment(newComment);
         setNewComment('');
+        setIsFocused(false);
     };
 
     return (
-        <div className="space-y-6">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Notes</h3>
+        <div className="max-w-3xl mx-auto mt-8">
+
+
+            {/* Input Area - YouTube Style (Top) */}
+            <div className="flex gap-4 mb-8">
+                <div className="flex-shrink-0">
+                    {currentUser?.photoURL ? (
+                        <img
+                            src={currentUser.photoURL}
+                            alt={currentUser.displayName}
+                            className="w-10 h-10 rounded-full object-cover"
+                        />
+                    ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm">
+                            {currentUser?.displayName ? currentUser.displayName.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
+                        </div>
+                    )}
+                </div>
+                <div className="flex-1">
+                    <form onSubmit={handleSubmit} className="relative">
+                        <div className={`relative transition-all duration-200 ${isFocused ? 'mb-12' : ''}`}>
+                            <input
+                                type="text"
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                onFocus={() => setIsFocused(true)}
+                                placeholder="Add a comment..."
+                                className="w-full border-b border-gray-200 py-2 bg-transparent focus:border-black focus:outline-none transition-colors placeholder:text-gray-500 text-sm"
+                            />
+                            <div className={`absolute right-0 top-full mt-2 flex items-center gap-2 transition-all duration-200 origin-top ${isFocused ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsFocused(false);
+                                        setNewComment('');
+                                    }}
+                                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={!newComment.trim()}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-[#065fd4] rounded-full hover:bg-[#065fd4]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Comment
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             {/* Comment List */}
-            <div className="space-y-4">
+            <div className="space-y-6">
                 {comments.length === 0 ? (
-                    <div className="text-center py-10 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
-                        <p className="text-sm text-gray-500 font-medium">No notes yet</p>
-                        <p className="text-xs text-gray-400 mt-1">Start the discussion by adding a note below</p>
-                    </div>
+                    null // Don't show empty state if input is right there, cleaner look
                 ) : (
                     comments.map((comment, index) => (
-                        <div key={index} className="flex gap-3 group">
-                            <div className="w-2 h-2 rounded-full bg-gray-300 mt-2 flex-shrink-0"></div>
-                            <div className="flex-1 space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-400 flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
-                                        {new Date(comment.timestamp).toLocaleString()}
+                        <div key={index} className="flex gap-4 group">
+                            {/* Avatar */}
+                            <div className="flex-shrink-0">
+                                {comment.authorPhoto ? (
+                                    <img
+                                        src={comment.authorPhoto}
+                                        alt={comment.author}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2e3192] to-[#00aeef] flex items-center justify-center text-white text-sm font-bold">
+                                        {comment.author ? comment.author.charAt(0).toUpperCase() : 'U'}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm font-semibold text-gray-900">
+                                        {comment.author || 'Unknown User'}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                        {new Date(comment.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                     </span>
                                 </div>
-                                <div className="text-sm text-gray-600">
+
+                                <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
                                     {comment.text}
                                 </div>
                             </div>
@@ -121,26 +189,6 @@ const CommentSection = ({ comments = [], onAddComment }) => {
                     ))
                 )}
             </div>
-
-            {/* Input */}
-            <form onSubmit={handleSubmit} className="flex gap-3 items-start">
-                <div className="flex-1 relative">
-                    <textarea
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Add a note..."
-                        className="w-full min-h-[80px] p-4 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00aeef]/20 focus:border-[#00aeef] text-sm resize-none transition-all placeholder:text-gray-400"
-                    />
-                    <button
-                        type="submit"
-                        disabled={!newComment.trim()}
-                        className="absolute bottom-3 right-3 p-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-90 active:scale-95 shadow-sm"
-                        style={{ backgroundColor: '#2e3192' }}
-                    >
-                        <Send className="w-3.5 h-3.5" />
-                    </button>
-                </div>
-            </form>
         </div>
     );
 };
@@ -150,6 +198,7 @@ const CommentSection = ({ comments = [], onAddComment }) => {
 const ReviewView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
     const [previewDoc, setPreviewDoc] = useState(null);
     const {
         applications,
@@ -195,7 +244,9 @@ const ReviewView = () => {
         const newComment = {
             text,
             timestamp: new Date().toISOString(),
-            author: 'Me' // In a real app, get from auth context
+            author: currentUser?.displayName || 'Reviewer',
+            authorPhoto: currentUser?.photoURL,
+            authorId: currentUser?.uid
         };
         const updatedComments = [...(review.comments || []), newComment];
         updateReview(id, { comments: updatedComments });
@@ -254,6 +305,15 @@ const ReviewView = () => {
                         {getReviewStatus(id).replace('_', ' ')}
                     </span>
                 </div>
+            </div>
+
+            {/* 2. Comments Section (Moved here) */}
+            <div className="mb-10">
+                <CommentSection
+                    comments={review.comments}
+                    onAddComment={handleAddComment}
+                    currentUser={currentUser}
+                />
             </div>
 
             {/* 2. Compliance Checks (Non-scored docs) */}
@@ -347,11 +407,7 @@ const ReviewView = () => {
                 </div>
             </div>
 
-            {/* 4. Comments */}
-            <CommentSection
-                comments={review.comments}
-                onAddComment={handleAddComment}
-            />
+
 
             {/* 5. Sticky Bottom Action Bar */}
             <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-100 p-4 z-50">
@@ -386,7 +442,7 @@ const ReviewView = () => {
                 onClose={() => setPreviewDoc(null)}
             />
 
-        </div>
+        </div >
     );
 };
 
