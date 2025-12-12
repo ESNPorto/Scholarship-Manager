@@ -5,7 +5,7 @@ import { Play, ArrowRight, Layers, CheckCircle2 } from 'lucide-react';
 import { getReviewerStatus } from '../../utils/scoring';
 
 const ReviewSessionCard = ({ userRole }) => {
-    const { applications, reviews, startReviewSession, reviewSession, jumpToApplication } = useApp();
+    const { applications, reviews, startReviewSession, reviewSession, resumeSession } = useApp();
     const navigate = useNavigate();
 
     // Combined Logic: Calculate Progress & Pending Status
@@ -32,9 +32,11 @@ const ReviewSessionCard = ({ userRole }) => {
     };
 
     const handleResumeSession = () => {
-        const appId = jumpToApplication(reviewSession.currentIndex);
-        if (appId) {
+        const appId = resumeSession();
+        if (appId && appId !== 'finished') {
             navigate(`/review/${appId}?reviewMode=true`);
+        } else if (appId === 'finished') {
+            alert("Session completed! No more pending applications found in this queue.");
         }
     };
 
@@ -102,7 +104,7 @@ const ReviewSessionCard = ({ userRole }) => {
                                         <span className="inline-block w-2 h-2 rounded-full bg-esn-green animate-pulse" />
                                     </div>
                                     <p className="text-sm text-gray-500">
-                                        Resuming at application <span className="font-bold text-gray-800">#{reviewSession.currentIndex + 1}</span>
+                                        Ready to review the <span className="font-bold text-gray-800">next application</span>
                                     </p>
                                 </>
                             ) : (
@@ -119,8 +121,8 @@ const ReviewSessionCard = ({ userRole }) => {
                         <button
                             onClick={hasActiveSession ? handleResumeSession : handleStartSession}
                             className={`relative w-full sm:w-auto group/btn flex items-center justify-center gap-3 px-8 py-3.5 font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] ${hasActiveSession
-                                    ? 'bg-gray-900 text-white hover:bg-black'
-                                    : 'bg-esn-dark-blue text-white hover:bg-blue-900 hover:shadow-esn-dark-blue/25'
+                                ? 'bg-gray-900 text-white hover:bg-black'
+                                : 'bg-esn-dark-blue text-white hover:bg-blue-900 hover:shadow-esn-dark-blue/25'
                                 }`}
                         >
                             <Play className="w-4 h-4 fill-current" />

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { subscribeToReviews, saveReviewToDb, saveCommentToDb, getEditions, getApplicationsByEdition } from '../services/db';
+import { getReviewerStatus } from '../utils/scoring';
 
 const AppContext = createContext();
 
@@ -270,12 +271,41 @@ export const AppProvider = ({ children }) => {
         return null;
     };
 
-    // Jump to specific index (useful for resuming or list nav)
+    // Jump to specific index (useful for seeking)
     const jumpToApplication = (index) => {
         if (!reviewSession.isActive) return null;
         if (index >= 0 && index < reviewSession.queue.length) {
             setReviewSession(prev => ({ ...prev, currentIndex: index }));
             return reviewSession.queue[index];
+        }
+        return null; // Return null if invalid index
+    };
+
+    const resumeSession = () => {
+        if (!reviewSession.isActive || !userRole) return null;
+
+        const checkIsReviewed = (appId) => {
+            const review = reviews[appId];
+            return getReviewerStatus(review, userRole);
+        };
+
+        let nextIndex = reviewSession.currentIndex;
+
+        while (nextIndex < reviewSession.queue.length && checkIsReviewed(reviewSession.queue[nextIndex])) {
+            nextIndex++;
+        }
+
+        if (nextIndex >= reviewSession.queue.length) {
+        }
+
+        if (nextIndex !== reviewSession.currentIndex) {
+            setReviewSession(prev => ({ ...prev, currentIndex: nextIndex }));
+        }
+
+        if (nextIndex < reviewSession.queue.length) {
+            return reviewSession.queue[nextIndex];
+        } else {
+            return 'finished';
         }
     };
 
@@ -306,7 +336,8 @@ export const AppProvider = ({ children }) => {
             endReviewSession,
             nextApplication,
             previousApplication,
-            jumpToApplication
+            jumpToApplication,
+            resumeSession
         }}>
             {children}
         </AppContext.Provider>

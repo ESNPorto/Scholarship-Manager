@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, X, SkipForward, CheckCircle } from 'lucide-react';
+import { getReviewerStatus } from '../../utils/scoring';
 
 const ReviewBottomNav = ({ currentAppId }) => {
     const {
@@ -11,7 +12,8 @@ const ReviewBottomNav = ({ currentAppId }) => {
         endReviewSession,
         reviews,
         applications,
-        jumpToApplication
+        jumpToApplication,
+        userRole
     } = useApp();
 
     const navigate = useNavigate();
@@ -105,7 +107,7 @@ const ReviewBottomNav = ({ currentAppId }) => {
                     {/* Center: Info */}
                     <div className="flex flex-col items-center">
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                            Application {currentIndex + 1} of {queue.length}
+                            Reviewed {applications.filter(app => getReviewerStatus(reviews[app.id], userRole)).length} of {applications.length}
                         </span>
                         <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                             Review Mode Active
