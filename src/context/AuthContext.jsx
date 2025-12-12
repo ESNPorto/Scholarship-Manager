@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useApp } from './AppContext';
 import { auth } from '../firebase';
 import {
     signInWithPopup,
@@ -16,6 +17,7 @@ export function useAuth() {
 export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const { setUserRole } = useApp();
 
     function login() {
         const provider = new GoogleAuthProvider();
@@ -23,6 +25,7 @@ export function AuthProvider({ children }) {
     }
 
     function logout() {
+        setUserRole(null);
         return signOut(auth);
     }
 
@@ -30,10 +33,21 @@ export function AuthProvider({ children }) {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
             setLoading(false);
+
+            if (user && user.email) {
+                const email = user.email.toLowerCase();
+                if (email === 'president@esnporto.org') {
+                    setUserRole('president');
+                } else if (email === 'cf@esnporto.org') {
+                    setUserRole('cf');
+                } else if (email === 'relacoes.externas@esnporto.org') {
+                    setUserRole('eo');
+                }
+            }
         });
 
         return unsubscribe;
-    }, []);
+    }, [setUserRole]);
 
     const value = {
         currentUser,
