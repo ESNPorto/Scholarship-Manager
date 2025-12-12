@@ -5,19 +5,60 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Trophy, Medal, Award, FileDown, Download, ChevronRight } from 'lucide-react';
 import Papa from 'papaparse';
 import UnifiedDashboardCard from './dashboard/UnifiedDashboardCard';
-
+// import ReviewSessionCard from './dashboard/ReviewSessionCard'; // REMOVED
 import ReviewerBadges from './common/ReviewerBadges';
-import ReviewSessionCard from './dashboard/ReviewSessionCard';
 import Select from './common/Select';
 import { getReviewerStatus } from '../utils/scoring';
 
 const DashboardView = () => {
-    const { applications, reviews, getReviewStatus, isLoading, userRole } = useApp();
+    const {
+        applications,
+        reviews,
+        getReviewStatus,
+        isLoading,
+        userRole,
+        // Review Session Context
+        startReviewSession,
+        reviewSession,
+        resumeSession
+    } = useApp();
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'reviewed', 'in_progress', 'not_started'
     const [viewFilter, setViewFilter] = useState('pending_me'); // 'pending_me', 'all', 'done_me'
     const [sortConfig, setSortConfig] = useState({ key: 'score', direction: 'desc' });
+
+    // --- Session Logic (Lifted from ReviewSessionCard) ---
+    const sessionStats = useMemo(() => {
+        if (!userRole || !applications.length) return null;
+
+        const total = applications.length;
+        const reviewedCount = applications.filter(app => {
+            const review = reviews[app.id];
+            return getReviewerStatus(review, userRole);
+        }).length;
+
+        const pendingCount = total - reviewedCount;
+        const percentage = total > 0 ? Math.round((reviewedCount / total) * 100) : 0;
+
+        return { total, reviewedCount, pendingCount, percentage };
+    }, [applications, reviews, userRole]);
+
+    const handleStartSession = () => {
+        const firstAppId = startReviewSession(userRole);
+        if (firstAppId) {
+            navigate(`/review/${firstAppId}?reviewMode=true`);
+        }
+    };
+
+    const handleResumeSession = () => {
+        const appId = resumeSession();
+        if (appId && appId !== 'finished') {
+            navigate(`/review/${appId}?reviewMode=true`);
+        } else if (appId === 'finished') {
+            alert("Session completed! No more pending applications found in this queue.");
+        }
+    };
 
 
 
@@ -206,14 +247,15 @@ const DashboardView = () => {
     return (
         <div className="space-y-8">
             {/* Unified Analytics Card */}
-            <UnifiedDashboardCard applications={applications} stats={stats} />
-
-
-
-            {/* Review Session Entry Point */}
-            {userRole && (
-                <ReviewSessionCard userRole={userRole} />
-            )}
+            <UnifiedDashboardCard
+                applications={applications}
+                stats={stats}
+                userRole={userRole}
+                sessionStats={sessionStats}
+                onStartSession={handleStartSession}
+                onResumeSession={handleResumeSession}
+                reviewSession={reviewSession}
+            />
 
             {/* Filters and Search */}
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
