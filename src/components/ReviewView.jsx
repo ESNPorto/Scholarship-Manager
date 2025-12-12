@@ -22,7 +22,12 @@ const ReviewView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+
+    // --- State & Hooks ---
     const [previewDoc, setPreviewDoc] = useState(null);
+    const [showAutoAdvanceToast, setShowAutoAdvanceToast] = useState(false);
+    const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(null);
+
     const {
         applications,
         reviews,
@@ -31,16 +36,124 @@ const ReviewView = () => {
         getReviewStatus,
         isLoading,
         isEditionsLoading,
-        userRole
+        userRole,
+        reviewSession,
+        nextApplication,
+        previousApplication
     } = useApp();
 
     const application = applications.find(app => String(app.id) === id);
     const review = reviews[id] || {};
 
+    // --- Helpers (must be before Effects) ---
+    const isReviewComplete = (r) => {
+        if (!userRole || !r) return false;
+        // Simple check: Motivation + Presentation must have scores for this role
+        const hasScore = (section) => r[section] && r[section][userRole] !== undefined && r[section][userRole] !== '';
+        return hasScore('motivation') && hasScore('presentation');
+    };
+
+    const cancelAutoAdvance = () => {
+        if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
+        setShowAutoAdvanceToast(false);
+    };
+
+    // --- Refs ---
+    // Track previous completion state to detect *new* completion
+    const wasCompleteRef = React.useRef(isReviewComplete(review));
+
+    // --- Effects ---
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [id]);
 
+    useEffect(() => {
+        const isNowComplete = isReviewComplete(review);
+        const reviewModeActive = window.location.search.includes('reviewMode=true');
+
+        if (reviewModeActive && !wasCompleteRef.current && isNowComplete) {
+            // Trigger Auto-Advance
+            setShowAutoAdvanceToast(true);
+            const timer = setTimeout(() => {
+                const nextId = nextApplication();
+                if (nextId) {
+                    if (nextId === 'finished') {
+                        navigate('/');
+                    } else {
+                        navigate(`/review/${nextId}?reviewMode=true`);
+                        window.scrollTo(0, 0);
+                    }
+                }
+                setShowAutoAdvanceToast(false);
+            }, 2000); // 2 second delay
+            setAutoAdvanceTimer(timer);
+        } else if (!isNowComplete && showAutoAdvanceToast) {
+            // Cancel if they change it back to incomplete
+            cancelAutoAdvance();
+        }
+
+        wasCompleteRef.current = isNowComplete;
+    }, [review, userRole, reviewSession]); // review changes on update
+
+    // Keyboard Shortcuts
+    useEffect(() => {
+        if (!window.location.search.includes('reviewMode=true')) return;
+
+        const handleKeyDown = (e) => {
+            // Ignore if typing in an input/textarea
+            if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+            switch (e.key) {
+                case 'ArrowRight':
+                case 'n':
+                case 'N':
+                    e.preventDefault();
+                    if (reviewSession?.isActive) {
+                        const nextId = nextApplication();
+                        if (nextId && nextId !== 'finished') {
+                            navigate(`/review/${nextId}?reviewMode=true`);
+                            window.scrollTo(0, 0);
+                        }
+                    }
+                    break;
+                case 'ArrowLeft':
+                case 'p':
+                case 'P':
+                    e.preventDefault();
+                    if (reviewSession?.isActive) {
+                        const prevId = previousApplication();
+                        if (prevId) {
+                            navigate(`/review/${prevId}?reviewMode=true`);
+                            window.scrollTo(0, 0);
+                        }
+                    }
+                    break;
+                case 's':
+                case 'S':
+                    // Skip (same as next for now)
+                    e.preventDefault();
+                    if (reviewSession?.isActive) {
+                        const nextId = nextApplication();
+                        if (nextId && nextId !== 'finished') {
+                            navigate(`/review/${nextId}?reviewMode=true`);
+                            window.scrollTo(0, 0);
+                        }
+                    }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    navigate('/');
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [reviewSession, navigate, nextApplication, previousApplication]);
+
+    // --- Early Returns ---
     if (isLoading || isEditionsLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -182,117 +295,7 @@ const ReviewView = () => {
         navigate('/');
     };
 
-    // --- Auto-Advance & Shortcuts Logic ---
-    const [showAutoAdvanceToast, setShowAutoAdvanceToast] = useState(false);
-    const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(null);
-    const {
-        reviewSession,
-        nextApplication,
-        previousApplication,
-        // userRole already available from top scope
-    } = useApp();
 
-    // Check if review is complete for current role
-    const isReviewComplete = (r) => {
-        if (!userRole || !r) return false;
-        // Simple check: Motivation + Presentation must have scores for this role
-        const hasScore = (section) => r[section] && r[section][userRole] !== undefined && r[section][userRole] !== '';
-        return hasScore('motivation') && hasScore('presentation');
-    };
-
-    // Track previous completion state to detect *new* completion
-    const wasCompleteRef = React.useRef(isReviewComplete(review));
-
-    useEffect(() => {
-        const isNowComplete = isReviewComplete(review);
-        const reviewModeActive = window.location.search.includes('reviewMode=true');
-
-        if (reviewModeActive && !wasCompleteRef.current && isNowComplete) {
-            // Trigger Auto-Advance
-            setShowAutoAdvanceToast(true);
-            const timer = setTimeout(() => {
-                const nextId = nextApplication();
-                if (nextId) {
-                    if (nextId === 'finished') {
-                        navigate('/');
-                    } else {
-                        navigate(`/review/${nextId}?reviewMode=true`);
-                        window.scrollTo(0, 0);
-                    }
-                }
-                setShowAutoAdvanceToast(false);
-            }, 2000); // 2 second delay
-            setAutoAdvanceTimer(timer);
-        } else if (!isNowComplete && showAutoAdvanceToast) {
-            // Cancel if they change it back to incomplete
-            cancelAutoAdvance();
-        }
-
-        wasCompleteRef.current = isNowComplete;
-    }, [review, userRole, reviewSession]); // review changes on update
-
-    const cancelAutoAdvance = () => {
-        if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
-        setShowAutoAdvanceToast(false);
-    };
-
-    // Keyboard Shortcuts
-    useEffect(() => {
-        if (!window.location.search.includes('reviewMode=true')) return;
-
-        const handleKeyDown = (e) => {
-            // Ignore if typing in an input/textarea
-            if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-
-            switch (e.key) {
-                case 'ArrowRight':
-                case 'n':
-                case 'N':
-                    e.preventDefault();
-                    if (reviewSession?.isActive) {
-                        const nextId = nextApplication();
-                        if (nextId && nextId !== 'finished') {
-                            navigate(`/review/${nextId}?reviewMode=true`);
-                            window.scrollTo(0, 0);
-                        }
-                    }
-                    break;
-                case 'ArrowLeft':
-                case 'p':
-                case 'P':
-                    e.preventDefault();
-                    if (reviewSession?.isActive) {
-                        const prevId = previousApplication();
-                        if (prevId) {
-                            navigate(`/review/${prevId}?reviewMode=true`);
-                            window.scrollTo(0, 0);
-                        }
-                    }
-                    break;
-                case 's':
-                case 'S':
-                    // Skip (same as next for now)
-                    e.preventDefault();
-                    if (reviewSession?.isActive) {
-                        const nextId = nextApplication();
-                        if (nextId && nextId !== 'finished') {
-                            navigate(`/review/${nextId}?reviewMode=true`);
-                            window.scrollTo(0, 0);
-                        }
-                    }
-                    break;
-                case 'Escape':
-                    e.preventDefault();
-                    navigate('/');
-                    break;
-                default:
-                    break;
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [reviewSession, navigate, nextApplication, previousApplication]);
 
     const totalScore = calculateScore(review);
     const verifiedCount = Object.values(review.verifiedDocs || {}).filter(Boolean).length;
