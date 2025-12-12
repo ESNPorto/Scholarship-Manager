@@ -35,3 +35,22 @@ body {
 html {
   scrollbar-width: none;
 }
+
+/* Remove default focus outline from Recharts */
+.recharts-wrapper,
+.recharts-surface,
+.recharts-layer {
+  outline: none !important;
+}
+
+/* Specific Recharts Overrides to prevent black focus border */
+.recharts-pie *,
+.recharts-bar-rectangle * {
+  outline: none !important;
+}
+
+.recharts-wrapper g:focus,
+.recharts-wrapper path:focus,
+.recharts-wrapper>svg>g {
+  outline: none !important;
+}

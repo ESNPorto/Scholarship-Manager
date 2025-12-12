@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { createEdition, updateEdition } from '../services/db';
 import { useApp } from '../context/AppContext';
+import Select from './common/Select';
 
 const CreateEditionModal = ({ isOpen, onClose, onSuccess, editionToEdit = null }) => {
     const { refreshEditions } = useApp();
@@ -112,14 +113,12 @@ const CreateEditionModal = ({ isOpen, onClose, onSuccess, editionToEdit = null }
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
-                            <select
+                            <Select
                                 value={semester}
-                                onChange={(e) => setSemester(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-esn-cyan/20 focus:border-esn-cyan transition-all outline-none bg-white"
-                            >
-                                <option value="1st">1st</option>
-                                <option value="2nd">2nd</option>
-                            </select>
+                                onChange={(value) => setSemester(value)}
+                                options={['1st', '2nd']}
+                                className="w-full"
+                            />
                         </div>
                     </div>
 

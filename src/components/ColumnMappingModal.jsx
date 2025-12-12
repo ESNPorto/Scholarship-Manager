@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, AlertCircle, ArrowRight } from 'lucide-react';
 import { CSV_FIELD_CONFIG } from '../utils/csvParser';
+import Select from './common/Select';
 
 const ColumnMappingModal = ({ isOpen, onClose, headers, onConfirm }) => {
     const [mapping, setMapping] = useState({});
@@ -114,23 +115,22 @@ const ColumnMappingModal = ({ isOpen, onClose, headers, onConfirm }) => {
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                        <select
+                                        <Select
                                             value={mapping[field.key] || ''}
-                                            onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                                            className={`w-full px-3 py-2 text-sm rounded-lg border focus:ring-2 focus:ring-esn-cyan/20 outline-none transition-all ${touched[field.key] && field.required && !mapping[field.key]
-                                                    ? 'border-red-300 bg-red-50 text-red-900 focus:border-red-500'
-                                                    : mapping[field.key]
-                                                        ? 'border-esn-green/50 bg-green-50/30 text-gray-900 focus:border-esn-green'
-                                                        : 'border-gray-200 focus:border-esn-cyan'
+                                            onChange={(value) => handleFieldChange(field.key, value)}
+                                            options={[
+                                                { value: '', label: '-- Select Column --' },
+                                                ...headers.map(header => ({ value: header, label: header }))
+                                            ]}
+                                            className="w-full text-sm"
+                                            buttonClassName={`${touched[field.key] && field.required && !mapping[field.key]
+                                                ? 'border-red-300 ring-2 ring-red-100'
+                                                : mapping[field.key]
+                                                    ? 'border-esn-green/50'
+                                                    : ''
                                                 }`}
-                                        >
-                                            <option value="">-- Select Column --</option>
-                                            {headers.map((header, idx) => (
-                                                <option key={idx} value={header}>
-                                                    {header}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            placeholder="-- Select Column --"
+                                        />
                                         {touched[field.key] && field.required && !mapping[field.key] && (
                                             <p className="text-xs text-red-500 mt-1">This field is required.</p>
                                         )}

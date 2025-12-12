@@ -50,7 +50,7 @@ const DashboardCharts = ({ applications, stats }) => {
                 <h3 className="text-lg font-bold text-gray-900 mb-6">Overview</h3>
                 <div className="h-64 w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
+                        <PieChart className="outline-none">
                             <Pie
                                 data={chartData.overview}
                                 cx="50%"
@@ -74,6 +74,8 @@ const DashboardCharts = ({ applications, stats }) => {
                                 wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }}
                             />
                         </PieChart>
+
+
                     </ResponsiveContainer>
                     {/* Centered Total Label */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
@@ -92,6 +94,7 @@ const DashboardCharts = ({ applications, stats }) => {
                             data={chartData.destinations}
                             layout="vertical"
                             margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+                            className="outline-none"
                         >
                             <XAxis type="number" hide />
                             <YAxis

@@ -8,6 +8,7 @@ import DashboardCharts from './DashboardCharts';
 import ProgressCard from './dashboard/ProgressCard';
 import ReviewerBadges from './common/ReviewerBadges';
 import ReviewSessionCard from './dashboard/ReviewSessionCard';
+import Select from './common/Select';
 import { getReviewerStatus } from '../utils/scoring';
 
 const DashboardView = () => {
@@ -228,7 +229,7 @@ const DashboardView = () => {
                     <input
                         type="text"
                         placeholder="Search candidates, universities..."
-                        className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-esn-cyan/20 focus:border-esn-cyan transition-all text-sm font-medium text-gray-900 placeholder-gray-400"
+                        className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-all text-sm font-medium text-gray-900 placeholder-gray-400"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -238,34 +239,30 @@ const DashboardView = () => {
 
                     {/* View Filter (My Pending / All) */}
                     {userRole && (
-                        <div className="relative">
-                            <select
-                                className="appearance-none pl-4 pr-10 py-2.5 bg-esn-dark-blue/5 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-esn-dark-blue/20 focus:border-esn-dark-blue text-sm font-bold text-esn-dark-blue cursor-pointer hover:bg-esn-dark-blue/10 transition-colors"
-                                value={viewFilter}
-                                onChange={(e) => setViewFilter(e.target.value)}
-                            >
-                                <option value="pending_me">My Pending Reviews</option>
-                                <option value="all">Broad Overview</option>
-                                <option value="done_me">Completed by Me</option>
-                            </select>
-                            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-esn-dark-blue/50 pointer-events-none" />
-                        </div>
+                        <Select
+                            value={viewFilter}
+                            onChange={(value) => setViewFilter(value)}
+                            options={[
+                                { value: 'pending_me', label: 'My Pending Reviews' },
+                                { value: 'all', label: 'Broad Overview' },
+                                { value: 'done_me', label: 'Completed by Me' }
+                            ]}
+                            className="w-full sm:w-auto min-w-[200px]"
+                        />
                     )}
 
-                    <div className="relative">
-                        <select
-                            className="appearance-none pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-esn-cyan/20 focus:border-esn-cyan text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                        >
-                            <option value="all">All Status</option>
-                            <option value="not_started">Not Started</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="reviewed">Reviewed</option>
-                            <option value="discarded">Discarded</option>
-                        </select>
-                        <ChevronRight className="rotate-90 absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-                    </div>
+                    <Select
+                        value={statusFilter}
+                        onChange={(value) => setStatusFilter(value)}
+                        options={[
+                            { value: 'all', label: 'All Status' },
+                            { value: 'not_started', label: 'Not Started' },
+                            { value: 'in_progress', label: 'In Progress' },
+                            { value: 'reviewed', label: 'Reviewed' },
+                            { value: 'discarded', label: 'Discarded' }
+                        ]}
+                        className="w-full sm:w-auto min-w-[180px]"
+                    />
 
                     <button
                         onClick={handleExportCSV}
