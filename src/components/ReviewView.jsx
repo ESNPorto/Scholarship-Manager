@@ -52,29 +52,83 @@ const ReviewView = () => {
     // --- Handlers ---
 
     const handleScoreChange = (field, value, subField = null) => {
+        let updates = {};
+        let shouldAutoVerify = false;
+
         if (subField) {
             // Handle nested updates (e.g. motivation.president)
             const currentFieldData = review[field] || {};
 
             // If just updating the score, we also want to track WHO did it
             // Only specific subFields (president, eo, cf) should be tracked this way
-            const updates = {
+            const fieldUpdates = {
                 ...currentFieldData,
                 [subField]: value
             };
 
             // Add metadata if user is logged in
             if (currentUser && ['president', 'eo', 'cf'].includes(subField)) {
-                updates[`${subField}By`] = currentUser.uid;
-                updates[`${subField}At`] = new Date().toISOString();
+                fieldUpdates[`${subField}By`] = currentUser.uid;
+                fieldUpdates[`${subField}At`] = new Date().toISOString();
             }
 
-            updateReview(id, {
-                [field]: updates
-            });
+            updates[field] = fieldUpdates;
+
+            // Check if all sub-fields are filled to auto-verify
+            // We treat 0 as a valid score, so check for undefined/null/empty string
+            const isValid = (val) => val !== undefined && val !== null && val !== '';
+
+            // Check based on known subfields for these types
+            const hasPresident = isValid(fieldUpdates.president);
+            const hasEO = isValid(fieldUpdates.eo);
+            const hasCF = isValid(fieldUpdates.cf);
+
+            if (hasPresident && hasEO && hasCF) {
+                shouldAutoVerify = true;
+            }
+
         } else {
-            updateReview(id, { [field]: value });
+            updates[field] = value;
+            // Auto-verify single field if value is valid
+            if (value !== undefined && value !== null && value !== '') {
+                shouldAutoVerify = true;
+            }
         }
+
+        // Apply Auto-Verification if conditions met
+        if (shouldAutoVerify) {
+            const currentVerifiedDocs = review.verifiedDocs || {};
+
+            // Map scoring field to verification key
+            let verificationKey = field;
+            if (field === 'academic') {
+                verificationKey = 'records';
+            }
+
+            // Only update if not already verified to verify it
+            if (!currentVerifiedDocs[verificationKey]) {
+                const newVerifiedDocs = {
+                    ...currentVerifiedDocs,
+                    [verificationKey]: true
+                };
+                updates.verifiedDocs = newVerifiedDocs;
+
+                // Also check if this completes the entire review
+                const hasCitizenCard = !!application.documents?.citizenCard;
+                const requiredTotal = hasCitizenCard ? 7 : 6;
+                const newVerifiedCount = Object.values(newVerifiedDocs).filter(Boolean).length;
+
+                if (newVerifiedCount === requiredTotal) {
+                    updates.status = 'reviewed';
+                    updates.valid = true;
+                } else if (getReviewStatus(id) === 'not_started') {
+                    updates.status = 'in_progress';
+                    updates.valid = true;
+                }
+            }
+        }
+
+        updateReview(id, updates);
     };
 
     const toggleDocumentVerification = (docKey) => {
