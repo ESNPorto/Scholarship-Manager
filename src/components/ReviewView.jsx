@@ -28,7 +28,8 @@ const ReviewView = () => {
         updateReview,
         addReviewComment,
         getReviewStatus,
-        isLoading
+        isLoading,
+        isEditionsLoading
     } = useApp();
 
     const application = applications.find(app => String(app.id) === id);
@@ -38,7 +39,7 @@ const ReviewView = () => {
         window.scrollTo(0, 0);
     }, [id]);
 
-    if (isLoading) {
+    if (isLoading || isEditionsLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-esn-dark-blue"></div>
