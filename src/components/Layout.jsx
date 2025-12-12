@@ -55,7 +55,7 @@ const Layout = ({ children }) => {
                         onClick={() => navigate('/')}
                     >
                         <img src={logo} alt="Scholarship Manager Logo" className="w-8 h-8 object-contain group-hover:scale-105 transition-transform duration-200" />
-                        <h1 className="text-lg font-bold text-gray-900 tracking-tight">Scholarship Manager</h1>
+                        <h1 className="hidden sm:block text-lg font-bold text-gray-900 tracking-tight">Scholarship Manager</h1>
                     </div>
 
                     <div className="flex items-center gap-6">

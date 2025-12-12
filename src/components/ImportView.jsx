@@ -188,7 +188,7 @@ const ImportView = () => {
         // Success Summary Card logic
         if (importStatus?.type === 'success' && !isExpanded) {
             return (
-                <div className="bg-green-50 rounded-xl shadow-sm border border-green-100 px-6 py-4 flex items-center justify-between mb-6 animate-in fade-in slide-in-from-top-2">
+                <div className="bg-green-50 rounded-xl shadow-sm border border-green-100 px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 animate-in fade-in slide-in-from-top-2">
                     <div className="flex items-center gap-4">
                         <div className="p-2 bg-white rounded-lg shadow-sm">
                             <CheckCircle className="w-5 h-5 text-green-600" />
@@ -204,7 +204,7 @@ const ImportView = () => {
                         onClick={() => {
                             setImportStatus(null); // Dismiss
                         }}
-                        className="p-2 text-green-700 hover:bg-green-100 rounded-lg transition-colors"
+                        className="self-end sm:self-auto p-2 text-green-700 hover:bg-green-100 rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -214,7 +214,7 @@ const ImportView = () => {
 
         if (!isExpanded && hasData && !importFile) {
             return (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-between">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
 
                         <div>
@@ -226,7 +226,7 @@ const ImportView = () => {
                     </div>
                     <button
                         onClick={() => setIsExpanded(true)}
-                        className="px-4 py-2 bg-esn-dark-blue text-white text-sm font-medium rounded-lg hover:bg-esn-dark-blue/90 transition-colors"
+                        className="w-full sm:w-auto px-4 py-2 bg-esn-dark-blue text-white text-sm font-medium rounded-lg hover:bg-esn-dark-blue/90 transition-colors"
                     >
                         Import New Batch
                     </button>
@@ -299,10 +299,10 @@ const ImportView = () => {
     };
 
     return (
-        <div className="flex h-[calc(100vh-64px)] -m-6 bg-gray-50/50">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] -mx-4 sm:-mx-6 lg:-mx-8 -mt-8 -mb-24 bg-gray-50/50">
             {/* --- SIDEBAR --- */}
-            <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col h-full">
-                <div className="p-5 border-b border-gray-200 bg-white">
+            <div className="w-full md:w-80 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200 flex flex-col md:h-full max-h-[300px] md:max-h-none flex-shrink-0">
+                <div className="p-5 border-b border-gray-200 bg-white sticky top-0 z-10">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-bold text-gray-900 tracking-tight">Workspaces</h2>
                         <button
@@ -347,7 +347,7 @@ const ImportView = () => {
                         {/* Header */}
                         <div className="px-8 py-6 bg-white border-b border-gray-100 flex justify-between items-start">
                             <div>
-                                <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
+                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
                                     {selectedEdition.name}
                                 </h1>
                                 <p className="text-gray-500 mt-1 font-medium">
@@ -456,7 +456,7 @@ const ImportView = () => {
                                             <table className="w-full text-left text-sm whitespace-nowrap">
                                                 <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
                                                     <tr>
-                                                        <th className="px-4 py-3 sticky left-0 bg-gray-50 z-10 shadow-sm border-r border-gray-200">Candidate Name</th>
+                                                        <th className="px-4 py-3 md:sticky md:left-0 bg-gray-50 z-10 md:shadow-sm md:border-r border-gray-200">Candidate Name</th>
 
                                                         {CSV_FIELD_CONFIG.filter(f => f.key !== 'name').map((field) => (
                                                             <th key={field.key} className="px-4 py-3">
@@ -469,7 +469,7 @@ const ImportView = () => {
                                                     {previewApps.slice(0, visibleLimit).map((app) => (
                                                         <tr key={app.id} className="hover:bg-gray-50/80 transition-colors">
 
-                                                            <td className="px-4 py-3 font-medium text-gray-900 sticky left-0 bg-white z-10 shadow-sm border-r border-gray-100">
+                                                            <td className="px-4 py-3 font-medium text-gray-900 md:sticky md:left-0 bg-white z-10 md:shadow-sm md:border-r border-gray-100">
                                                                 {app.personalInfo?.name || 'Unknown'}
                                                             </td>
 
