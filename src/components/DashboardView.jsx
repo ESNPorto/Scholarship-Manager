@@ -4,7 +4,7 @@ import { calculateScore } from '../utils/scoring';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Trophy, Medal, Award, FileDown, Download, ChevronRight } from 'lucide-react';
 import Papa from 'papaparse';
-import DashboardCharts from './DashboardCharts';
+import UnifiedDashboardCard from './dashboard/UnifiedDashboardCard';
 
 import ReviewerBadges from './common/ReviewerBadges';
 import ReviewSessionCard from './dashboard/ReviewSessionCard';
@@ -205,8 +205,8 @@ const DashboardView = () => {
 
     return (
         <div className="space-y-8">
-            {/* Charts & Stats Section */}
-            <DashboardCharts applications={applications} stats={stats} />
+            {/* Unified Analytics Card */}
+            <UnifiedDashboardCard applications={applications} stats={stats} />
 
 
 
