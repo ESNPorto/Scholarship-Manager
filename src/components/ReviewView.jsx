@@ -55,11 +55,22 @@ const ReviewView = () => {
         if (subField) {
             // Handle nested updates (e.g. motivation.president)
             const currentFieldData = review[field] || {};
+
+            // If just updating the score, we also want to track WHO did it
+            // Only specific subFields (president, eo, cf) should be tracked this way
+            const updates = {
+                ...currentFieldData,
+                [subField]: value
+            };
+
+            // Add metadata if user is logged in
+            if (currentUser && ['president', 'eo', 'cf'].includes(subField)) {
+                updates[`${subField}By`] = currentUser.uid;
+                updates[`${subField}At`] = new Date().toISOString();
+            }
+
             updateReview(id, {
-                [field]: {
-                    ...currentFieldData,
-                    [subField]: value
-                }
+                [field]: updates
             });
         } else {
             updateReview(id, { [field]: value });

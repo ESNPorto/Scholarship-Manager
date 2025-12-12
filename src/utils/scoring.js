@@ -21,3 +21,22 @@ export const calculateScore = (review) => {
 
     return Math.round(total); // Return rounded integer as per requirement
 };
+
+// Check if a specific reviewer role has completed their part
+// Roles: 'president', 'eo', 'cf'
+export const getReviewerStatus = (review, role) => {
+    if (!review || !role) return false;
+
+    // Check if score exists for this role in both multi-reviewer fields
+    const hasMotivation = hasScore(review.motivation, role);
+    const hasPresentation = hasScore(review.presentation, role);
+
+    return hasMotivation && hasPresentation;
+};
+
+// Helper to check if a score exists for a role
+const hasScore = (fieldData, role) => {
+    if (!fieldData) return false;
+    // Check if the role property exists and is a number (0 is a valid score)
+    return typeof fieldData[role] === 'number';
+};

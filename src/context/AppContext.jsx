@@ -12,6 +12,20 @@ export const AppProvider = ({ children }) => {
     const [currentEditionId, setCurrentEditionId] = useState(null);
     const [isEditionsLoading, setIsEditionsLoading] = useState(true);
 
+    // Reviewer Role State
+    const [userRole, setUserRoleState] = useState(() => {
+        return localStorage.getItem('scholarship_reviewer_role') || null;
+    });
+
+    const setUserRole = (role) => {
+        setUserRoleState(role);
+        if (role) {
+            localStorage.setItem('scholarship_reviewer_role', role);
+        } else {
+            localStorage.removeItem('scholarship_reviewer_role');
+        }
+    };
+
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -160,7 +174,9 @@ export const AppProvider = ({ children }) => {
             error,
             updateReview,
             addReviewComment,
-            getReviewStatus
+            getReviewStatus,
+            userRole,
+            setUserRole
         }}>
             {children}
         </AppContext.Provider>

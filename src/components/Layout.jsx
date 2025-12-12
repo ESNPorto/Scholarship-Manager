@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FileText, Upload, LogOut, ChevronDown, Check } from 'lucide-react';
+import { FileText, Upload, LogOut, ChevronDown, Check, UserCog, Shield } from 'lucide-react';
 
 import logo from '../assets/favicon.png';
 
 const Layout = ({ children }) => {
     const { currentUser, logout } = useAuth();
-    const { editions, currentEditionId, switchEdition } = useApp();
+    const { editions, currentEditionId, switchEdition, userRole, setUserRole } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
     const [scrollProgress, setScrollProgress] = useState(0);
@@ -138,6 +138,29 @@ const Layout = ({ children }) => {
                                             <p className="text-sm font-medium text-gray-900 truncate">{currentUser.displayName}</p>
                                             <p className="text-xs text-gray-500 truncate">{currentUser.email}</p>
                                         </div>
+
+                                        {/* Role Selector */}
+                                        <div className="p-2 border-b border-gray-100">
+                                            <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Your Role</p>
+                                            {[
+                                                { id: 'president', label: 'President', color: 'bg-green-100' },
+                                                { id: 'eo', label: 'External Officer', color: 'bg-blue-100' },
+                                                { id: 'cf', label: 'Fiscal Council', color: 'bg-orange-100' }
+                                            ].map(role => (
+                                                <button
+                                                    key={role.id}
+                                                    onClick={() => setUserRole(userRole === role.id ? null : role.id)}
+                                                    className={`w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center justify-between transition-colors ${userRole === role.id
+                                                        ? 'bg-esn-dark-blue/5 text-esn-dark-blue font-medium'
+                                                        : 'text-gray-600 hover:bg-gray-50'
+                                                        }`}
+                                                >
+                                                    <span>{role.label}</span>
+                                                    {userRole === role.id && <Check className="w-3.5 h-3.5" />}
+                                                </button>
+                                            ))}
+                                        </div>
+
                                         <button
                                             onClick={() => {
                                                 navigate('/import');

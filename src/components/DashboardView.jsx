@@ -2,15 +2,19 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { calculateScore } from '../utils/scoring';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Trophy, Medal, Award, FileDown, Download } from 'lucide-react';
+import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Trophy, Medal, Award, FileDown, Download, ChevronRight } from 'lucide-react';
 import Papa from 'papaparse';
 import DashboardCharts from './DashboardCharts';
+import ProgressCard from './dashboard/ProgressCard';
+import ReviewerBadges from './common/ReviewerBadges';
+import { getReviewerStatus } from '../utils/scoring';
 
 const DashboardView = () => {
-    const { applications, reviews, getReviewStatus, isLoading } = useApp();
+    const { applications, reviews, getReviewStatus, isLoading, userRole } = useApp();
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'reviewed', 'in_progress', 'not_started'
+    const [viewFilter, setViewFilter] = useState('pending_me'); // 'pending_me', 'all', 'done_me'
     const [sortConfig, setSortConfig] = useState({ key: 'score', direction: 'desc' });
 
 
@@ -44,6 +48,21 @@ const DashboardView = () => {
 
     const filteredApplications = useMemo(() => {
         let filtered = [...processedApplications];
+
+        // 0. Reviewer View Filters
+        if (userRole) {
+            if (viewFilter === 'pending_me') {
+                filtered = filtered.filter(app => {
+                    const review = reviews[app.id];
+                    return !getReviewerStatus(review, userRole);
+                });
+            } else if (viewFilter === 'done_me') {
+                filtered = filtered.filter(app => {
+                    const review = reviews[app.id];
+                    return getReviewerStatus(review, userRole);
+                });
+            }
+        }
 
         // Filter by status
         if (statusFilter !== 'all') {
@@ -83,7 +102,7 @@ const DashboardView = () => {
         });
 
         return filtered;
-    }, [processedApplications, searchTerm, statusFilter, sortConfig]);
+    }, [processedApplications, searchTerm, statusFilter, viewFilter, sortConfig, userRole, reviews]);
 
     const handleSort = (key) => {
         setSortConfig(current => ({
@@ -187,9 +206,18 @@ const DashboardView = () => {
             {/* Charts & Stats Section */}
             <DashboardCharts applications={applications} stats={stats} />
 
+            {/* Personal Progress Section */}
+            {userRole && (
+                <ProgressCard
+                    applications={applications}
+                    reviews={reviews}
+                    userRole={userRole}
+                />
+            )}
+
             {/* Filters and Search */}
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
-                <div className="relative w-full sm:w-96 group">
+                <div className="relative w-full sm:w-80 group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors" style={{ '--tw-text-opacity': 1 }} />
                     <input
                         type="text"
@@ -200,7 +228,24 @@ const DashboardView = () => {
                     />
                 </div>
 
-                <div className="flex gap-2 w-full sm:w-auto p-1 items-center">
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto p-1 items-center justify-end">
+
+                    {/* View Filter (My Pending / All) */}
+                    {userRole && (
+                        <div className="relative">
+                            <select
+                                className="appearance-none pl-4 pr-10 py-2.5 bg-esn-dark-blue/5 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-esn-dark-blue/20 focus:border-esn-dark-blue text-sm font-bold text-esn-dark-blue cursor-pointer hover:bg-esn-dark-blue/10 transition-colors"
+                                value={viewFilter}
+                                onChange={(e) => setViewFilter(e.target.value)}
+                            >
+                                <option value="pending_me">My Pending Reviews</option>
+                                <option value="all">Broad Overview</option>
+                                <option value="done_me">Completed by Me</option>
+                            </select>
+                            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-esn-dark-blue/50 pointer-events-none" />
+                        </div>
+                    )}
+
                     <div className="relative">
                         <select
                             className="appearance-none pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-esn-cyan/20 focus:border-esn-cyan text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
@@ -213,7 +258,7 @@ const DashboardView = () => {
                             <option value="reviewed">Reviewed</option>
                             <option value="discarded">Discarded</option>
                         </select>
-                        <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        <ChevronRight className="rotate-90 absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                     </div>
 
                     <button
@@ -221,7 +266,7 @@ const DashboardView = () => {
                         className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95 ml-2"
                     >
                         <FileDown className="w-4 h-4" />
-                        Export
+                        <span className="hidden lg:inline">Export</span>
                     </button>
                 </div>
             </div>
@@ -246,6 +291,9 @@ const DashboardView = () => {
                                 </th>
                                 <th className="px-6 py-5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('score')}>
                                     <div className="flex items-center justify-center gap-2">Score <ArrowUpDown className="w-3 h-3" /></div>
+                                </th>
+                                <th className="px-6 py-5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                    Reviewers
                                 </th>
                                 <th className="px-6 py-5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('status')}>
                                     <div className="flex items-center justify-center gap-2">Status <ArrowUpDown className="w-3 h-3" /></div>
@@ -278,6 +326,16 @@ const DashboardView = () => {
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <span className={`text-lg font-bold tabular-nums tracking-tight ${app.score >= 15 ? 'text-esn-green' : app.score >= 10 ? 'text-esn-dark-blue' : 'text-esn-orange'}`}>{app.score}</span>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <div className="flex justify-center">
+                                            <div className="scale-90">
+                                                <ReviewerBadges
+                                                    review={reviews[app.id]}
+                                                    userRole={userRole}
+                                                />
+                                            </div>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <StatusBadge status={app.status} />
