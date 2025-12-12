@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, CheckCircle2, Circle, Clock, ArrowUpDown, Upload, Trophy, Medal, Award, FileDown, Download, ChevronRight } from 'lucide-react';
 import Papa from 'papaparse';
 import DashboardCharts from './DashboardCharts';
-import ProgressCard from './dashboard/ProgressCard';
+
 import ReviewerBadges from './common/ReviewerBadges';
 import ReviewSessionCard from './dashboard/ReviewSessionCard';
 import Select from './common/Select';
@@ -208,14 +208,7 @@ const DashboardView = () => {
             {/* Charts & Stats Section */}
             <DashboardCharts applications={applications} stats={stats} />
 
-            {/* Personal Progress Section */}
-            {userRole && (
-                <ProgressCard
-                    applications={applications}
-                    reviews={reviews}
-                    userRole={userRole}
-                />
-            )}
+
 
             {/* Review Session Entry Point */}
             {userRole && (

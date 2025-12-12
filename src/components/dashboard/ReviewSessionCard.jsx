@@ -1,33 +1,27 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../../context/AppContext'; // Corrected path
 import { useNavigate } from 'react-router-dom';
-import { Play, ArrowRight, Layers } from 'lucide-react';
+import { Play, ArrowRight, Layers, CheckCircle2 } from 'lucide-react';
+import { getReviewerStatus } from '../../utils/scoring';
 
 const ReviewSessionCard = ({ userRole }) => {
     const { applications, reviews, startReviewSession, reviewSession, jumpToApplication } = useApp();
     const navigate = useNavigate();
 
-    // Calculate pending count logic (duplicated temporarily from context to show count before starting)
-    // In a real refactor, we should extract getPendingApps(role) to a helper or context
-    const pendingCount = useMemo(() => {
-        if (!userRole || !applications.length) return 0;
+    // Combined Logic: Calculate Progress & Pending Status
+    const stats = useMemo(() => {
+        if (!userRole || !applications.length) return null;
 
-        const reviewFieldMap = {
-            'president': 'president',
-            'eo': 'eo',
-            'cf': 'cf'
-        };
-
-        return applications.filter(app => {
-            const review = reviews[app.id] || {};
-            if (review.status === 'discarded') return false;
-
-            const hasScore = (section) => review[section] && review[section][userRole] !== undefined && review[section][userRole] !== '';
-            const motivationDone = hasScore('motivation');
-            const presentationDone = hasScore('presentation');
-
-            return !(motivationDone && presentationDone);
+        const total = applications.length;
+        const reviewedCount = applications.filter(app => {
+            const review = reviews[app.id];
+            return getReviewerStatus(review, userRole);
         }).length;
+
+        const pendingCount = total - reviewedCount;
+        const percentage = Math.round((reviewedCount / total) * 100);
+
+        return { total, reviewedCount, pendingCount, percentage };
     }, [applications, reviews, userRole]);
 
     const handleStartSession = () => {
@@ -44,72 +38,97 @@ const ReviewSessionCard = ({ userRole }) => {
         }
     };
 
-    // If active session exists, show Resume
-    if (reviewSession.isActive && reviewSession.role === userRole) {
-        const currentInProgress = reviewSession.currentIndex + 1;
-        const total = reviewSession.queue.length;
+    if (!stats) return null;
 
-        return (
-            <div className="bg-gradient-to-r from-esn-green to-emerald-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
-                {/* Background Decorations */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl group-hover:bg-white/10 transition-colors duration-500"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-400/20 rounded-full translate-y-1/3 -translate-x-1/3 blur-xl"></div>
+    const { total, reviewedCount, pendingCount, percentage } = stats;
+    const isAllCaughtUp = pendingCount === 0;
+    const hasActiveSession = reviewSession.isActive && reviewSession.role === userRole;
 
-                <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-inner group-hover:scale-105 transition-transform duration-300">
-                            <Layers className="w-7 h-7 text-emerald-200" />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-bold tracking-tight mb-1">Resume Session</h2>
-                            <p className="text-emerald-100 font-medium opacity-90">
-                                Resume application <span className="font-bold text-white bg-white/20 px-1.5 py-0.5 rounded text-sm">{currentInProgress}</span> of {total}
-                            </p>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={handleResumeSession}
-                        className="w-full sm:w-auto px-8 py-3.5 bg-white text-esn-green font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-gray-50 active:scale-95 transition-all flex items-center justify-center gap-2.5 group/btn"
-                    >
-                        <Play className="w-5 h-5 fill-current" />
-                        Resume Review
-                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    if (pendingCount === 0) return null;
+    // Role Label Helper
+    const roleLabels = {
+        president: 'President',
+        eo: 'External Officer',
+        cf: 'Fiscal Council'
+    };
 
     return (
-        <div className="bg-gradient-to-r from-esn-dark-blue to-blue-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
-            {/* Background Decorations */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl group-hover:bg-white/10 transition-colors duration-500"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-esn-cyan/20 rounded-full translate-y-1/3 -translate-x-1/3 blur-xl"></div>
+        <div className="group relative overflow-hidden rounded-3xl bg-white border border-gray-100 p-1 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-500 mb-8">
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-            <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-inner group-hover:scale-105 transition-transform duration-300">
-                        <Layers className="w-7 h-7 text-esn-cyan" />
-                    </div>
+            <div className="relative p-6 sm:p-8">
+                {/* Header Row: Title & Percentage */}
+                <div className="flex items-start justify-between mb-6">
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight mb-1">Review Session</h2>
-                        <p className="text-blue-100 font-medium opacity-90">
-                            You have <span className="font-bold text-white bg-white/20 px-1.5 py-0.5 rounded text-sm">{pendingCount}</span> applications pending your review.
+                        <div className="flex items-center gap-3 mb-1">
+                            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Your Progress</h2>
+                            <span className="px-2.5 py-0.5 rounded-full bg-esn-dark-blue/5 text-esn-dark-blue text-[10px] font-bold uppercase tracking-wide border border-esn-dark-blue/10">
+                                {roleLabels[userRole] || userRole}
+                            </span>
+                        </div>
+                        <p className="text-sm text-gray-500 font-medium">
+                            You have reviewed <span className="text-gray-900 font-bold">{reviewedCount}</span> out of <span className="text-gray-900 font-bold">{total}</span> applications.
                         </p>
+                    </div>
+                    <div className="text-right">
+                        <span className="text-4xl font-bold text-gray-900 tracking-tight">{percentage}%</span>
                     </div>
                 </div>
 
-                <button
-                    onClick={handleStartSession}
-                    className="w-full sm:w-auto px-8 py-3.5 bg-white text-esn-dark-blue font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-gray-50 active:scale-95 transition-all flex items-center justify-center gap-2.5 group/btn"
-                >
-                    <Play className="w-5 h-5 fill-current" />
-                    Start Session
-                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                </button>
+                {/* Progress Bar - Full Width */}
+                <div className="relative h-2.5 bg-gray-100 rounded-full overflow-hidden mb-8">
+                    <div
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-esn-green to-emerald-500 transition-all duration-1000 ease-out"
+                        style={{ width: `${percentage}%` }}
+                    />
+                </div>
+
+                {/* Bottom Row: Context & Action */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-2 border-t border-gray-50">
+                    {/* Status Context */}
+                    <div className="flex items-center gap-4 w-full sm:w-auto">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${isAllCaughtUp ? 'bg-esn-green/10 text-esn-green' : hasActiveSession ? 'bg-gray-900 text-white' : 'bg-esn-dark-blue/5 text-esn-dark-blue'}`}>
+                            {isAllCaughtUp ? <CheckCircle2 className="w-6 h-6" /> : <Layers className="w-6 h-6" />}
+                        </div>
+                        <div>
+                            {isAllCaughtUp ? (
+                                <>
+                                    <h3 className="font-bold text-gray-900">All caught up!</h3>
+                                    <p className="text-sm text-gray-500">Great job, you have no pending reviews.</p>
+                                </>
+                            ) : hasActiveSession ? (
+                                <>
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <h3 className="font-bold text-gray-900">Session in Progress</h3>
+                                        <span className="inline-block w-2 h-2 rounded-full bg-esn-green animate-pulse" />
+                                    </div>
+                                    <p className="text-sm text-gray-500">
+                                        Resuming at application <span className="font-bold text-gray-800">#{reviewSession.currentIndex + 1}</span>
+                                    </p>
+                                </>
+                            ) : (
+                                <>
+                                    <h3 className="font-bold text-gray-900">Ready to review?</h3>
+                                    <p className="text-sm text-gray-500">{pendingCount} applications waiting for you.</p>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Action Button */}
+                    {!isAllCaughtUp && (
+                        <button
+                            onClick={hasActiveSession ? handleResumeSession : handleStartSession}
+                            className={`relative w-full sm:w-auto group/btn flex items-center justify-center gap-3 px-8 py-3.5 font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] ${hasActiveSession
+                                    ? 'bg-gray-900 text-white hover:bg-black'
+                                    : 'bg-esn-dark-blue text-white hover:bg-blue-900 hover:shadow-esn-dark-blue/25'
+                                }`}
+                        >
+                            <Play className="w-4 h-4 fill-current" />
+                            <span>{hasActiveSession ? 'Resume Session' : 'Start Session'}</span>
+                            <ArrowRight className="w-4 h-4 opacity-50 group-hover/btn:translate-x-1 group-hover/btn:opacity-100 transition-all" />
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
