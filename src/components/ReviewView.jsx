@@ -13,6 +13,7 @@ import ComplianceCard from './review/ComplianceCard';
 import EvaluationCard from './review/EvaluationCard';
 import MultiEvaluationCard from './review/MultiEvaluationCard';
 import CommentSection from './review/CommentSection';
+import ReviewBottomNav from './review/ReviewBottomNav';
 
 
 // --- Main Component ---
@@ -29,7 +30,8 @@ const ReviewView = () => {
         addReviewComment,
         getReviewStatus,
         isLoading,
-        isEditionsLoading
+        isEditionsLoading,
+        userRole
     } = useApp();
 
     const application = applications.find(app => String(app.id) === id);
@@ -180,7 +182,117 @@ const ReviewView = () => {
         navigate('/');
     };
 
-    // --- Derived State ---
+    // --- Auto-Advance & Shortcuts Logic ---
+    const [showAutoAdvanceToast, setShowAutoAdvanceToast] = useState(false);
+    const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(null);
+    const {
+        reviewSession,
+        nextApplication,
+        previousApplication,
+        // userRole already available from top scope
+    } = useApp();
+
+    // Check if review is complete for current role
+    const isReviewComplete = (r) => {
+        if (!userRole || !r) return false;
+        // Simple check: Motivation + Presentation must have scores for this role
+        const hasScore = (section) => r[section] && r[section][userRole] !== undefined && r[section][userRole] !== '';
+        return hasScore('motivation') && hasScore('presentation');
+    };
+
+    // Track previous completion state to detect *new* completion
+    const wasCompleteRef = React.useRef(isReviewComplete(review));
+
+    useEffect(() => {
+        const isNowComplete = isReviewComplete(review);
+        const reviewModeActive = window.location.search.includes('reviewMode=true');
+
+        if (reviewModeActive && !wasCompleteRef.current && isNowComplete) {
+            // Trigger Auto-Advance
+            setShowAutoAdvanceToast(true);
+            const timer = setTimeout(() => {
+                const nextId = nextApplication();
+                if (nextId) {
+                    if (nextId === 'finished') {
+                        navigate('/');
+                    } else {
+                        navigate(`/review/${nextId}?reviewMode=true`);
+                        window.scrollTo(0, 0);
+                    }
+                }
+                setShowAutoAdvanceToast(false);
+            }, 2000); // 2 second delay
+            setAutoAdvanceTimer(timer);
+        } else if (!isNowComplete && showAutoAdvanceToast) {
+            // Cancel if they change it back to incomplete
+            cancelAutoAdvance();
+        }
+
+        wasCompleteRef.current = isNowComplete;
+    }, [review, userRole, reviewSession]); // review changes on update
+
+    const cancelAutoAdvance = () => {
+        if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
+        setShowAutoAdvanceToast(false);
+    };
+
+    // Keyboard Shortcuts
+    useEffect(() => {
+        if (!window.location.search.includes('reviewMode=true')) return;
+
+        const handleKeyDown = (e) => {
+            // Ignore if typing in an input/textarea
+            if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+            switch (e.key) {
+                case 'ArrowRight':
+                case 'n':
+                case 'N':
+                    e.preventDefault();
+                    if (reviewSession?.isActive) {
+                        const nextId = nextApplication();
+                        if (nextId && nextId !== 'finished') {
+                            navigate(`/review/${nextId}?reviewMode=true`);
+                            window.scrollTo(0, 0);
+                        }
+                    }
+                    break;
+                case 'ArrowLeft':
+                case 'p':
+                case 'P':
+                    e.preventDefault();
+                    if (reviewSession?.isActive) {
+                        const prevId = previousApplication();
+                        if (prevId) {
+                            navigate(`/review/${prevId}?reviewMode=true`);
+                            window.scrollTo(0, 0);
+                        }
+                    }
+                    break;
+                case 's':
+                case 'S':
+                    // Skip (same as next for now)
+                    e.preventDefault();
+                    if (reviewSession?.isActive) {
+                        const nextId = nextApplication();
+                        if (nextId && nextId !== 'finished') {
+                            navigate(`/review/${nextId}?reviewMode=true`);
+                            window.scrollTo(0, 0);
+                        }
+                    }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    navigate('/');
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [reviewSession, navigate, nextApplication, previousApplication]);
 
     const totalScore = calculateScore(review);
     const verifiedCount = Object.values(review.verifiedDocs || {}).filter(Boolean).length;
@@ -394,34 +506,57 @@ const ReviewView = () => {
             </div>
 
 
-            {/* Sticky Bottom Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-100 p-4 z-50">
-                <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
-                    <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Score</span>
-                        <span className="text-3xl font-bold tabular-nums tracking-tight leading-none text-esn-dark-blue">
-                            {totalScore}<span className="text-sm text-gray-400 font-normal ml-1">/20</span>
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs text-gray-400 font-medium text-right">
-                            {verifiedCount} of {totalDocs} checks completed
-                        </span>
-                        <StatusDropdown
-                            status={getReviewStatus(id)}
-                            onStatusChange={(newStatus) => {
-                                const updates = { status: newStatus };
-                                if (newStatus === 'discarded') {
-                                    updates.valid = false;
-                                } else {
-                                    updates.valid = true;
-                                }
-                                updateReview(id, updates);
-                            }}
-                        />
+            {/* Sticky Bottom Action Bar - Standard Mode */}
+            {!window.location.search.includes('reviewMode=true') && (
+                <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-100 p-4 z-50">
+                    <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Score</span>
+                            <span className="text-3xl font-bold tabular-nums tracking-tight leading-none text-esn-dark-blue">
+                                {totalScore}<span className="text-sm text-gray-400 font-normal ml-1">/20</span>
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <span className="text-xs text-gray-400 font-medium text-right">
+                                {verifiedCount} of {totalDocs} checks completed
+                            </span>
+                            <StatusDropdown
+                                status={getReviewStatus(id)}
+                                onStatusChange={(newStatus) => {
+                                    const updates = { status: newStatus };
+                                    if (newStatus === 'discarded') {
+                                        updates.valid = false;
+                                    } else {
+                                        updates.valid = true;
+                                    }
+                                    updateReview(id, updates);
+                                }}
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
+
+            {/* Sticky Bottom Nav - Review Mode */}
+            {window.location.search.includes('reviewMode=true') && (
+                <ReviewBottomNav currentAppId={id} />
+            )}
+
+            {/* Auto-Advance Toast */}
+            {showAutoAdvanceToast && (
+                <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl z-[70] flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
+                    <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span className="font-medium">Auto-advancing...</span>
+                    </div>
+                    <button
+                        onClick={cancelAutoAdvance}
+                        className="text-sm font-bold text-esn-cyan hover:text-white transition-colors"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            )}
 
             <DocumentPreviewModal
                 url={previewDoc}

@@ -159,6 +159,128 @@ export const AppProvider = ({ children }) => {
         }
     };
 
+    // --- Review Session Logic ---
+    const [reviewSession, setReviewSession] = useState(() => {
+        const saved = localStorage.getItem('scholarship_review_session');
+        return saved ? JSON.parse(saved) : { isActive: false, role: null, queue: [], currentIndex: 0, stats: { total: 0, completed: 0 } };
+    });
+
+    useEffect(() => {
+        if (reviewSession.isActive) {
+            localStorage.setItem('scholarship_review_session', JSON.stringify(reviewSession));
+        } else {
+            localStorage.removeItem('scholarship_review_session');
+        }
+    }, [reviewSession]);
+
+    const startReviewSession = (role) => {
+        if (!role || !applications.length) return;
+
+        // Filter applications pending for this role
+        // 1. Not fully reviewed by this role
+        // 2. Not discarded (unless explicitly included, but for now exclude)
+        // 3. Sort by priority: In Progress > Not Started. Then by date/id.
+
+        const pendingApps = applications.filter(app => {
+            const review = reviews[app.id] || {};
+
+            // Check if discarded globally
+            if (review.status === 'discarded') return false;
+
+            // Check if already completed by this user
+            // We use getReviewerStatus helper logic here inline or import it
+            // For now, strict check on the sub-field
+            const isDone = review[reviewFieldMap[role]] && review[reviewFieldMap[role]].status === 'completed';
+            // Wait, the data structure is: review.motivation.president (score)
+            // Let's rely on existence of score for now as "done" is complex with partial saves
+            // Actually, let's use the helper if we can, or just check if score exists
+
+            // Simpler approach for MVP:
+            // If role is president, check review.motivation.president AND review.presentation.president have values?
+            // "Done" is hard to define perfectly without a flag. 
+            // Let's look for "missing score" in any required component.
+
+            // Helpers
+            const hasScore = (section) => review[section] && review[section][role] !== undefined && review[section][role] !== '';
+
+            const motivationDone = hasScore('motivation');
+            const presentationDone = hasScore('presentation');
+
+            // IRS/Records are shared, usually handled by specific roles but simplified here:
+            // If I am President, I need to do Mot + Pres.
+            // If I am EO, I need to do Mot + Pres.
+            // If I am CF, I need to do Mot + Pres.
+
+            return !(motivationDone && presentationDone);
+        });
+
+        if (pendingApps.length === 0) {
+            alert("No pending applications for your role!");
+            return;
+        }
+
+        // Sort: In Progress first
+        pendingApps.sort((a, b) => {
+            const getStatusRec = (id) => reviews[id] ? 1 : 0; // Rough 'touched' check
+            return getStatusRec(b.id) - getStatusRec(a.id);
+        });
+
+        const queue = pendingApps.map(app => app.id);
+
+        setReviewSession({
+            isActive: true,
+            role, // Save the role
+            queue,
+            currentIndex: 0,
+            startTime: Date.now(),
+            stats: { total: queue.length, completed: 0 }
+        });
+
+        return queue[0]; // Return first ID to navigate
+    };
+
+    const reviewFieldMap = {
+        'president': 'president',
+        'eo': 'eo',
+        'cf': 'cf'
+    };
+
+    const endReviewSession = () => {
+        setReviewSession({ isActive: false, role: null, queue: [], currentIndex: 0, stats: { total: 0, completed: 0 } });
+    };
+
+    const nextApplication = () => {
+        if (!reviewSession.isActive) return null;
+        if (reviewSession.currentIndex < reviewSession.queue.length - 1) {
+            const newIndex = reviewSession.currentIndex + 1;
+            setReviewSession(prev => ({ ...prev, currentIndex: newIndex })); // Update index
+            return reviewSession.queue[newIndex];
+        } else {
+            return 'finished'; // Signal end of queue
+        }
+    };
+
+    const previousApplication = () => {
+        if (!reviewSession.isActive) return null;
+        if (reviewSession.currentIndex > 0) {
+            const newIndex = reviewSession.currentIndex - 1;
+            setReviewSession(prev => ({ ...prev, currentIndex: newIndex }));
+            return reviewSession.queue[newIndex];
+        }
+        return null;
+    };
+
+    // Jump to specific index (useful for resuming or list nav)
+    const jumpToApplication = (index) => {
+        if (!reviewSession.isActive) return null;
+        if (index >= 0 && index < reviewSession.queue.length) {
+            setReviewSession(prev => ({ ...prev, currentIndex: index }));
+            return reviewSession.queue[index];
+        }
+    };
+
+
+
     return (
         <AppContext.Provider value={{
             applications,
@@ -176,7 +298,15 @@ export const AppProvider = ({ children }) => {
             addReviewComment,
             getReviewStatus,
             userRole,
-            setUserRole
+            setUserRole,
+
+            // Review Session
+            reviewSession,
+            startReviewSession,
+            endReviewSession,
+            nextApplication,
+            previousApplication,
+            jumpToApplication
         }}>
             {children}
         </AppContext.Provider>

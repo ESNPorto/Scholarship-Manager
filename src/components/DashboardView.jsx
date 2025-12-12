@@ -7,6 +7,7 @@ import Papa from 'papaparse';
 import DashboardCharts from './DashboardCharts';
 import ProgressCard from './dashboard/ProgressCard';
 import ReviewerBadges from './common/ReviewerBadges';
+import ReviewSessionCard from './dashboard/ReviewSessionCard';
 import { getReviewerStatus } from '../utils/scoring';
 
 const DashboardView = () => {
@@ -213,6 +214,11 @@ const DashboardView = () => {
                     reviews={reviews}
                     userRole={userRole}
                 />
+            )}
+
+            {/* Review Session Entry Point */}
+            {userRole && (
+                <ReviewSessionCard userRole={userRole} />
             )}
 
             {/* Filters and Search */}
