@@ -82,9 +82,7 @@ export const mapApplicationData = async (rawData, editionId, columnMapping, impo
         const email = emailRaw ? emailRaw.trim().toLowerCase() : '';
         // Create a unique ID based on email AND edition AND import batch (if provided)
         // This prevents overwrites on subsequent imports
-        const idBase = importBatchId
-            ? `${email}-${editionId}-${importBatchId}`
-            : `${email}-${editionId}`;
+        const idBase = `${email}-${editionId}`;
 
         const id = await hashString(idBase);
 
